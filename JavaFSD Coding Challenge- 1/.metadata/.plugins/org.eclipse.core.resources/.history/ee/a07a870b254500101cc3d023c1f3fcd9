@@ -1,0 +1,50 @@
+package com.hex.codingchallenge.controller;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.hex.codingchallenge.model.MedicalHistory;
+import com.hex.codingchallenge.service.MedicalHistoryService;
+
+@RestController
+@RequestMapping("/api/medical-history")
+public class MedicalHistoryController {
+	@Autowired
+	
+	private MedicalHistoryService medicalHistoryService;
+	
+	/*
+	 * AIM: Add a new medical history entry linked with patient and user details
+	 * METHOD: POST
+	 * PATH: /api/medical-history/add
+	 * PARAM: @RequestBody MedicalHistory medicalHistory - medical history details including patient and user references
+	 * RESPONSE: Saved MedicalHistory object wrapped in ResponseEntity with status 200 OK
+	 */
+
+	@PostMapping("/add")
+	public ResponseEntity<MedicalHistory> addMedicalHistoryWithPatientAndUser(
+			@RequestBody MedicalHistory medicalHistory) {
+		MedicalHistory saved = medicalHistoryService.saveMedicalHistoryWithPatientAndUser(medicalHistory);
+		return ResponseEntity.ok(saved);
+	}
+	 /*
+     * AIM: Fetch all medical records of a patient by ID (only illness and medication)
+     * PATH: /api/medical-history/patient/{id}
+     * METHOD: GET
+     * RESPONSE: List<MedicalHistory>
+     */
+	
+	@GetMapping("/api/medical-history/{patientId}")
+	public ResponseEntity<?> getAllMedicalRecordByPatientId(@PathVariable int patientId) {
+		List<?> list = medicalHistoryService.getAllMedicalRecordByPatientId(patientId);
+		return ResponseEntity.ok(list);
+	}
+}
+

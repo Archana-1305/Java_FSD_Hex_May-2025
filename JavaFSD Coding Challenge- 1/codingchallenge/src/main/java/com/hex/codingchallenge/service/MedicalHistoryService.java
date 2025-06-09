@@ -1,0 +1,65 @@
+package com.hex.codingchallenge.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.hex.codingchallenge.dto.MedicalHistoryDto;
+import com.hex.codingchallenge.exception.ResourceNotFoundException;
+import com.hex.codingchallenge.model.MedicalHistory;
+import com.hex.codingchallenge.model.Patient;
+import com.hex.codingchallenge.model.User;
+import com.hex.codingchallenge.repository.MedicalHistoryRepository;
+import com.hex.codingchallenge.repository.PatientRepository;
+
+@Service
+public class MedicalHistoryService {
+	 private MedicalHistoryRepository medicalHistoryRepository;
+	 private PatientRepository patientRepository;
+	 private UserService userService;
+	
+	 
+	 @Autowired
+		private MedicalHistoryDto medicalHistoryDto; 
+	
+	public MedicalHistoryService(MedicalHistoryRepository medicalHistoryRepository, PatientRepository patientRepository,
+			UserService userService) {
+		super();
+		this.medicalHistoryRepository = medicalHistoryRepository;
+		this.patientRepository = patientRepository;
+		this.userService = userService;
+		
+	}
+
+
+	public MedicalHistory saveMedicalHistoryWithPatientAndUser(MedicalHistory medicalHistory) {
+	        Patient patient = medicalHistory.getPatient();
+	        User user = patient.getUser();
+
+	        // Ensure user role
+	        user.setRole("PATIENT");
+
+	        user = userService.signUp(user);
+
+	        // Attach back to patient and save patient
+	        patient.setUser(user);
+	        patient = patientRepository.save(patient);
+
+	        // Attach patient back to medicalHistory and save
+	        medicalHistory.setPatient(patient);
+	        return medicalHistoryRepository.save(medicalHistory);
+	    }
+
+
+	public List<MedicalHistoryDto> getAllMedicalRecordByPatientId(int patientId) {
+		patientRepository.findById(patientId)
+			.orElseThrow(() -> new ResourceNotFoundException("Patient ID Invalid"));
+
+		List<MedicalHistory> list = medicalHistoryRepository.getAllMedicalRecordByPatientId(patientId);
+		return medicalHistoryDto.convertToDto(list);
+	}
+	
+	
+
+}

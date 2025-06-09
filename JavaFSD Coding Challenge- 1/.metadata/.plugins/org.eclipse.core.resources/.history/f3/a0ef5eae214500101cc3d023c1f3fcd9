@@ -1,0 +1,26 @@
+package com.hex.codingchallenge.controller;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.hex.codingchallenge.model.MedicalHistory;
+import com.hex.codingchallenge.service.MedicalHistoryService;
+
+@RestController
+@RequestMapping("/api/medical-history")
+public class MedicalHistoryController {
+	@Autowired
+	
+	private MedicalHistoryService medicalHistoryService;
+
+	@PostMapping("/add")
+	public ResponseEntity<MedicalHistory> addMedicalHistoryWithPatientAndUser(
+			@RequestBody MedicalHistory medicalHistory) {
+		MedicalHistory saved = medicalHistoryService.saveMedicalHistoryWithPatientAndUser(medicalHistory);
+		return ResponseEntity.ok(saved);
+	}
+}
+

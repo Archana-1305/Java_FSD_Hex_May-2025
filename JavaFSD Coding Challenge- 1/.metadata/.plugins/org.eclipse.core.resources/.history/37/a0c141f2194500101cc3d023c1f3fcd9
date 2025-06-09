@@ -1,0 +1,65 @@
+package com.hex.codingchallenge.service;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.hex.codingchallenge.exception.ResourceNotFoundException;
+import com.hex.codingchallenge.model.Doctor;
+import com.hex.codingchallenge.model.DoctorPatient;
+import com.hex.codingchallenge.model.Patient;
+import com.hex.codingchallenge.repository.DoctorPatientRepository;
+import com.hex.codingchallenge.repository.DoctorRepository;
+import com.hex.codingchallenge.repository.PatientRepository;
+
+@Service
+public class DoctorPatientService {
+	
+	private DoctorPatientRepository doctorPatientRepository;
+	private DoctorRepository doctorRepository;
+	private PatientRepository patientRepository;
+	
+
+	public DoctorPatientService(DoctorPatientRepository doctorPatientRepository, DoctorRepository doctorRepository,
+			PatientRepository patientRepository) {
+		super();
+		this.doctorPatientRepository = doctorPatientRepository;
+		this.doctorRepository = doctorRepository;
+		this.patientRepository = patientRepository;
+	}
+
+	public DoctorPatient appointment(int patientId, int doctorId, DoctorPatient doctorPatient) {
+		// Fetch Doctor by doctorId
+	    Doctor doctor = doctorRepository.findById(doctorId)
+	        .orElseThrow(() -> new ResourceNotFoundException("Doctor ID Invalid"));
+
+	    // Fetch Patient by patientId
+	    Patient patient = patientRepository.findById(patientId)
+	        .orElseThrow(() -> new ResourceNotFoundException("Patient ID Invalid"));
+
+	    // Generate today's date and attach it to doctorPatient object
+	    doctorPatient.setAppointment_date(LocalDate.now());
+
+	    // Attach Doctor and Patient to doctorPatient object
+	    doctorPatient.setDoctor(doctor);
+	    doctorPatient.setPatient(patient);
+
+	    // Save doctorPatient in DB
+	    return doctorPatientRepository.save(doctorPatient);
+	}
+
+	
+
+	public List<Patient> getAllPatientByDoctorId(int doctorId) {
+		doctorRepository.findById(doctorId)
+        .orElseThrow(() -> new ResourceNotFoundException("Doctor ID Invalid"));
+	
+		return doctorPatientRepository.getAllPatientByDoctorId(doctorId);
+	}
+
+
+	
+
+}

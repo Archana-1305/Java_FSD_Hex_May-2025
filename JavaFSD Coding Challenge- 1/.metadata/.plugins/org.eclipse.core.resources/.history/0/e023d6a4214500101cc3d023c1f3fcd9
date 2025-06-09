@@ -1,0 +1,9 @@
+package com.hex.codingchallenge.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.hex.codingchallenge.model.MedicalHistory;
+
+public interface MedicalHistoryRepository extends JpaRepository<MedicalHistory, Integer> {
+
+}

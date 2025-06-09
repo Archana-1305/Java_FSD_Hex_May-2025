@@ -1,0 +1,5 @@
+package com.hex.codingchallenge.dto;
+
+public class MedicalHistoryDto {
+
+}

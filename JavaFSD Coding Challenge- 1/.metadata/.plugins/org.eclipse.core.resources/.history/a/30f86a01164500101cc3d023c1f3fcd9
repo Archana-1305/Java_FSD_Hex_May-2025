@@ -1,0 +1,44 @@
+package com.hex.codingchallenge.controller;
+import com.hex.codingchallenge.model.MedicalHistory;
+import com.hex.codingchallenge.model.Patient;
+import com.hex.codingchallenge.model.User;
+import com.hex.codingchallenge.repository.MedicalHistoryRepository;
+import com.hex.codingchallenge.repository.PatientRepository;
+import com.hex.codingchallenge.service.UserService;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/medical-history")
+public class MedicalHistoryController {
+
+    @Autowired
+    private MedicalHistoryRepository medicalHistoryRepository;
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
+    private UserService userService;
+
+    @PostMapping("/add")
+    public ResponseEntity<?> createWithPatientAndUser(@RequestBody MedicalHistory medicalHistory) {
+        // Save user
+        Patient patient = medicalHistory.getPatient();
+        User user = patient.getUser();
+        user.setRole("PATIENT");
+        user = userService.signUp(user);
+
+        // Save patient
+        patient.setUser(user);
+        patient = patientRepository.save(patient);
+
+        // Save medical history
+        medicalHistory.setPatient(patient);
+        MedicalHistory savedHistory = medicalHistoryRepository.save(medicalHistory);
+
+        return ResponseEntity.ok(savedHistory);
+    }
+}

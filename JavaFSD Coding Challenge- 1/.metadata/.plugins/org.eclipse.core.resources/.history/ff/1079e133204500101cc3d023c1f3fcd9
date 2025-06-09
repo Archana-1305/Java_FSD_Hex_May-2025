@@ -1,0 +1,122 @@
+package com.hex.codingchallenge;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import com.hex.codingchallenge.exception.ResourceNotFoundException;
+import com.hex.codingchallenge.model.Doctor;
+import com.hex.codingchallenge.model.DoctorPatient;
+import com.hex.codingchallenge.model.Patient;
+import com.hex.codingchallenge.repository.DoctorPatientRepository;
+import com.hex.codingchallenge.repository.DoctorRepository;
+import com.hex.codingchallenge.repository.PatientRepository;
+import com.hex.codingchallenge.service.DoctorPatientService;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+public class DoctorPatientServiceTest {
+
+    @InjectMocks
+    private DoctorPatientService doctorPatientService;
+
+    @Mock
+    private DoctorPatientRepository doctorPatientRepository;
+
+    @Mock
+    private DoctorRepository doctorRepository;
+
+    @Mock
+    private PatientRepository patientRepository;
+
+    private Doctor doctor;
+    private Patient patient;
+    private DoctorPatient doctorPatient;
+
+    @BeforeEach
+    public void init() {
+        doctor = new Doctor();
+        doctor.setId(1);
+        doctor.setName("Dr. John");
+
+        patient = new Patient();
+        patient.setId(2);
+        patient.setName("Archana");
+
+        doctorPatient = new DoctorPatient();
+        doctorPatient.setId(10);
+        doctorPatient.setDoctor(doctor);
+        doctorPatient.setPatient(patient);
+        doctorPatient.setAppointment_date(LocalDate.now());
+    }
+
+    @Test
+    public void appointment_ValidIds_ReturnsDoctorPatient() {
+        DoctorPatient inputDoctorPatient = new DoctorPatient();
+        when(doctorRepository.findById(1)).thenReturn(Optional.of(doctor));
+        when(patientRepository.findById(2)).thenReturn(Optional.of(patient));
+        when(doctorPatientRepository.save(inputDoctorPatient)).thenReturn(doctorPatient);
+
+        DoctorPatient result = doctorPatientService.appointment(2, 1, inputDoctorPatient);
+
+        assertEquals(doctorPatient, result);
+        assertEquals(doctor, inputDoctorPatient.getDoctor());
+        assertEquals(patient, inputDoctorPatient.getPatient());
+        assertEquals(LocalDate.now(), inputDoctorPatient.getAppointment_date());
+    }
+
+    @Test
+    public void appointment_InvalidDoctorId_ThrowsException() {
+        DoctorPatient inputDoctorPatient = new DoctorPatient();
+        when(doctorRepository.findById(99)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
+                () -> doctorPatientService.appointment(2, 99, inputDoctorPatient));
+        assertEquals("Doctor ID Invalid".toLowerCase(), ex.getMessage().toLowerCase());
+    }
+
+    @Test
+    public void appointment_InvalidPatientId_ThrowsException() {
+        DoctorPatient inputDoctorPatient = new DoctorPatient();
+        when(doctorRepository.findById(1)).thenReturn(Optional.of(doctor));
+        when(patientRepository.findById(99)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
+                () -> doctorPatientService.appointment(99, 1, inputDoctorPatient));
+        assertEquals("Patient ID Invalid".toLowerCase(), ex.getMessage().toLowerCase());
+    }
+
+    @Test
+    public void getAllPatientByDoctorId_ValidDoctorId_ReturnsPatientList() {
+        List<Patient> expectedPatients = List.of(patient);
+        when(doctorRepository.findById(1)).thenReturn(Optional.of(doctor));
+        when(doctorPatientRepository.getAllPatientByDoctorId(1)).thenReturn(expectedPatients);
+
+        List<Patient> actualPatients = doctorPatientService.getAllPatientByDoctorId(1);
+        assertEquals(expectedPatients, actualPatients);
+    }
+
+    @Test
+    public void getAllPatientByDoctorId_InvalidDoctorId_ThrowsException() {
+        when(doctorRepository.findById(99)).thenReturn(Optional.empty());
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
+                () -> doctorPatientService.getAllPatientByDoctorId(99));
+        assertEquals("Doctor ID Invalid".toLowerCase(), ex.getMessage().toLowerCase());
+    }
+
+    @AfterEach
+    public void afterTest() {
+        doctor = null;
+        patient = null;
+        doctorPatient = null;
+    }

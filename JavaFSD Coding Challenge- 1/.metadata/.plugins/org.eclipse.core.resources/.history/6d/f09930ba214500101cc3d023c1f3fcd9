@@ -1,0 +1,50 @@
+package com.hex.codingchallenge.service;
+
+
+
+import org.springframework.stereotype.Service;
+
+import com.hex.codingchallenge.model.MedicalHistory;
+import com.hex.codingchallenge.model.Patient;
+import com.hex.codingchallenge.model.User;
+import com.hex.codingchallenge.repository.MedicalHistoryRepository;
+import com.hex.codingchallenge.repository.PatientRepository;
+
+@Service
+public class MedicalHistoryService {
+	 private MedicalHistoryRepository medicalHistoryRepository;
+	 private PatientRepository patientRepository;
+	 private UserService userService;
+	 
+	 
+	 
+	 public MedicalHistoryService(MedicalHistoryRepository medicalHistoryRepository, PatientRepository patientRepository,
+			UserService userService) {
+		super();
+		this.medicalHistoryRepository = medicalHistoryRepository;
+		this.patientRepository = patientRepository;
+		this.userService = userService;
+	}
+
+
+
+	public MedicalHistory saveMedicalHistoryWithPatientAndUser(MedicalHistory medicalHistory) {
+	        Patient patient = medicalHistory.getPatient();
+	        User user = patient.getUser();
+
+	        // Ensure user role
+	        user.setRole("PATIENT");
+
+	        // Save user (assuming signUp hashes password, checks uniqueness, etc)
+	        user = userService.signUp(user);
+
+	        // Attach back to patient and save patient
+	        patient.setUser(user);
+	        patient = patientRepository.save(patient);
+
+	        // Attach patient back to medicalHistory and save
+	        medicalHistory.setPatient(patient);
+	        return medicalHistoryRepository.save(medicalHistory);
+	    }
+
+}

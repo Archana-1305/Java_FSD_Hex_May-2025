@@ -1,0 +1,54 @@
+package com.hex.codingchallenge.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.hex.codingchallenge.enums.Speciality;
+import com.hex.codingchallenge.model.DoctorPatient;
+import com.hex.codingchallenge.model.Patient;
+import com.hex.codingchallenge.service.DoctorPatientService;
+
+import jakarta.websocket.server.PathParam;
+import org.springframework.web.bind.annotation.PostMapping;
+
+
+@RestController
+
+public class DoctorPatientController {
+	
+	@Autowired
+	private DoctorPatientService doctorPatientService;
+ 
+	
+	/*
+	 * AIM: Book an appointment between a patient and a doctor
+	 * METHOD: POST
+	 * PATH: /api/appointment/{patientId}/{doctorId}
+	 * PARAM: @PathVariable int patientId - ID of the patient
+	 *        @PathVariable int doctorId  - ID of the doctor
+	 *        @RequestBody DoctorPatient doctorPatient - appointment details (e.g., date, time, notes)
+	 * RESPONSE: DoctorPatient
+	 */
+	
+	@PostMapping("/api/appointment/{patientId}/{doctorId}")
+	public DoctorPatient appointment(@PathVariable int patientId,
+			@PathVariable int doctorId,
+			@RequestBody DoctorPatient doctorPatient) {
+		return doctorPatientService.appointment(patientId,doctorId,doctorPatient);
+		
+	}
+	
+	 @GetMapping("/api/getPatientByDoctorId/{doctorId}")
+	public List<Patient> getAllPatientByDoctorId(@PathVariable int doctorId) {
+		return doctorPatientService. getAllPatientByDoctorId(doctorId);
+		
+	}
+	
+	
+}

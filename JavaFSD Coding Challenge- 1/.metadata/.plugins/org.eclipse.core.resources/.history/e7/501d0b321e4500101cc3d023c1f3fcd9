@@ -1,0 +1,43 @@
+package com.hex.codingchallenge.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.hex.codingchallenge.enums.Speciality;
+import com.hex.codingchallenge.model.DoctorPatient;
+import com.hex.codingchallenge.model.Patient;
+import com.hex.codingchallenge.service.DoctorPatientService;
+
+import jakarta.websocket.server.PathParam;
+
+@RestController
+
+public class DoctorPatientController {
+	
+	@Autowired
+	private DoctorPatientService doctorPatientService;
+
+	public DoctorPatient appointment(@PathVariable int patientId,
+			@PathVariable int doctorId,
+			@RequestBody DoctorPatient doctorPatient) {
+		return doctorPatientService.appointment(patientId,doctorId,doctorPatient);
+		
+	}
+	
+	public List<Patient> getAllPatientByDoctorId(@PathVariable int doctorId) {
+		return doctorPatientService. getAllPatientByDoctorId(doctorId);
+		
+	}
+	
+	@GetMapping("/api/getByDocSpeciality")
+	public List<Patient> getByDoctorSpeciality(@PathParam(value = "speciality") Speciality speciality ) {
+		return doctorPatientService.getAllPatientByDoctorId(speciality);
+		
+	}
+}

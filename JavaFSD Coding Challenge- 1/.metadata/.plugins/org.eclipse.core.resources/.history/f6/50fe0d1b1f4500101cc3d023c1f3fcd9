@@ -1,0 +1,22 @@
+package com.hex.codingchallenge.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.hex.codingchallenge.enums.Speciality;
+import com.hex.codingchallenge.model.DoctorPatient;
+import com.hex.codingchallenge.model.Patient;
+
+public interface DoctorPatientRepository extends JpaRepository<DoctorPatient, Integer> {
+
+	@Query("select dp.patient from DoctorPatient dp where dp.doctor.id=?1")
+
+	List<Patient> getAllPatientByDoctorId(int doctorId);
+	
+	
+    @Query("select dp.patient from DoctorPatient dp where dp.doctor.speciality=?1")
+	List<Patient> getAllPatientByDoctorId(Speciality speciality);
+
+}
