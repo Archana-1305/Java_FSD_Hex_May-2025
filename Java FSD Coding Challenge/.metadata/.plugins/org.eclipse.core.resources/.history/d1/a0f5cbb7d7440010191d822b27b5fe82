@@ -1,0 +1,5 @@
+package com.hex.codingchallenge.util;
+
+public class JwtUtil {
+
+}

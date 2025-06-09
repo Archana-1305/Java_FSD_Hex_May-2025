@@ -1,0 +1,5 @@
+package com.hex.codingchallenge.exception;
+
+public class ResourceNotFoundException {
+
+}

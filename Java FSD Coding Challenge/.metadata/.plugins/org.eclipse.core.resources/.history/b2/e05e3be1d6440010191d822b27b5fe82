@@ -1,0 +1,5 @@
+package com.hex.codingchallenge.repository;
+
+public interface UserRepository {
+
+}
