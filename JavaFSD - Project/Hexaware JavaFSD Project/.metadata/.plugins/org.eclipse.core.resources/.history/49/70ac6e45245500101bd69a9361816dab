@@ -1,0 +1,51 @@
+package com.payrollmanagement.easypay.controller;
+
+import com.payrollmanagement.easypay.model.OvertimePolicy;
+import com.payrollmanagement.easypay.service.OvertimePolicyService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/overtime-policy")
+@CrossOrigin(origins = "http://localhost:5173")
+public class OvertimePolicyController {
+
+    @Autowired
+    private OvertimePolicyService overtimePolicyService;
+
+    // Add
+    @PostMapping("/add/{designationId}")
+    public ResponseEntity<OvertimePolicy> addPolicy(
+            @PathVariable int designationId, @RequestBody OvertimePolicy policy) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(overtimePolicyService.addPolicy(designationId, policy));
+    }
+
+    // Update
+    @PutMapping("/update/{id}")
+    public ResponseEntity<OvertimePolicy> updatePolicy(
+            @PathVariable int id, @RequestBody OvertimePolicy updated) {
+        return ResponseEntity.ok(overtimePolicyService.updatePolicy(id, updated));
+    }
+
+    // Get OT policy for a designation
+    @GetMapping("/getByDesignation/{designationId}")
+    public ResponseEntity<OvertimePolicy> getPolicyByDesignation(@PathVariable int designationId) {
+        return ResponseEntity.ok(overtimePolicyService.getPolicyByDesignation(designationId));
+    }
+
+    // Get all OT policies
+    @GetMapping("/getAll")
+    public ResponseEntity<List<OvertimePolicy>> getAllPolicies() {
+        return ResponseEntity.ok(overtimePolicyService.getAllPolicies());
+    }
+
+    // Get by policy ID
+    @GetMapping("/getById/{id}")
+    public ResponseEntity<OvertimePolicy> getPolicyById(@PathVariable int id) {
+        return ResponseEntity.ok(overtimePolicyService.getPolicyById(id));
+    }
+}

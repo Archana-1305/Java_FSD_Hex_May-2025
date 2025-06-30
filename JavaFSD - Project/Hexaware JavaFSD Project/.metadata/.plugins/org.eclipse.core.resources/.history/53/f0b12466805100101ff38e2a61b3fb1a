@@ -1,0 +1,87 @@
+package com.payrollmanagement.easypay.service;
+
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.coyote.BadRequestException;
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.enums.RequestStatus;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.BlockedDay;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.LeaveRequest;
+import com.payrollmanagement.easypay.model.LeaveTypes;
+import com.payrollmanagement.easypay.repository.BlockedDayRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+import com.payrollmanagement.easypay.repository.LeaveRequestRepository;
+import com.payrollmanagement.easypay.repository.LeaveTypesRepository;
+
+@Service
+public class LeaveRequestService {
+
+    private final LeaveRequestRepository leaveRequestRepository;
+    private final EmployeeRepository employeeRepository;
+    private final LeaveTypesRepository leaveTypesRepository;
+    private final BlockedDayRepository blockedDayRepository;
+
+    public LeaveRequestService(
+            LeaveRequestRepository leaveRequestRepository,
+            EmployeeRepository employeeRepository,
+            LeaveTypesRepository leaveTypesRepository,
+            BlockedDayRepository blockedDayRepository) {
+        this.leaveRequestRepository = leaveRequestRepository;
+        this.employeeRepository = employeeRepository;
+        this.leaveTypesRepository = leaveTypesRepository;
+        this.blockedDayRepository = blockedDayRepository;
+    }
+
+    public LeaveRequest applyForLeave(int employeeId, int leaveTypeId, int approverId, LeaveRequest leaveRequest) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+        LeaveTypes leaveType = leaveTypesRepository.findById(leaveTypeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave type not found"));
+        Employee approver = employeeRepository.findById(approverId)
+                .orElseThrow(() -> new ResourceNotFoundException("Approver not found"));
+
+        LocalDate start = leaveRequest.getStartDate();
+        LocalDate end = leaveRequest.getEndDate();
+        if (start == null || end == null || end.isBefore(start)) {
+            throw new BadRequestException("Invalid start or end date");
+        }
+
+        // Validation 1: Blocked days (holidays) cannot be selected
+        List<BlockedDay> blockedDays = blockedDayRepository.findByCompanyId(employee.getCompany().getId());
+        Set<LocalDate> blockedDates = new HashSet<>();
+        for (BlockedDay bd : blockedDays) blockedDates.add(bd.getDate());
+
+        for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+            if (blockedDates.contains(d)) {
+                throw new BadRequestException("Selected dates include a blocked holiday: " + d);
+            }
+        }
+
+        // Validation 2: Check for overlapping leave requests for this employee (pending or approved)
+        List<LeaveRequest> existing = leaveRequestRepository.findActiveByEmployee(employeeId, start, end);
+        if (!existing.isEmpty()) {
+            throw new BadRequestException("You already have a leave application during this period.");
+        }
+
+        // Validation 3: Check annual leave quota
+        int daysRequested = (int) (end.toEpochDay() - start.toEpochDay()) + 1;
+        int usedLeaves = leaveRequestRepository.countApprovedLeavesForType(employeeId, leaveTypeId, start.getYear());
+        if (usedLeaves + daysRequested > leaveType.getAnnualQuota()) {
+            throw new BadRequestException("Leave quota exceeded for " + leaveType.getName());
+        }
+
+        leaveRequest.setEmployee(employee);
+        leaveRequest.setLeaveType(leaveType);
+        leaveRequest.setApprover(approver);
+        leaveRequest.setStatus(RequestStatus.PENDING);
+        leaveRequest.setAppliedOn(LocalDate.now());
+
+        return leaveRequestRepository.save(leaveRequest);
+    }
+}

@@ -1,0 +1,69 @@
+package com.payrollmanagement.easypay.service;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.model.OvertimePolicy;
+import com.payrollmanagement.easypay.model.Designation;
+import com.payrollmanagement.easypay.repository.OvertimePolicyRepository;
+import com.payrollmanagement.easypay.repository.DesignationRepository;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+
+import java.util.List;
+
+@Service
+public class OvertimePolicyService {
+
+    private final OvertimePolicyRepository overtimePolicyRepo;
+    private final DesignationRepository designationRepo;
+
+    public OvertimePolicyService(OvertimePolicyRepository overtimePolicyRepo, DesignationRepository designationRepo) {
+        this.overtimePolicyRepo = overtimePolicyRepo;
+        this.designationRepo = designationRepo;
+    }
+
+ // Add a new OT Policy for a designation
+    public OvertimePolicy addPolicy(int designationId, OvertimePolicy policy) {
+        Designation designation = designationRepo.findById(designationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
+        policy.setDesignation(designation);
+        return overtimePolicyRepo.save(policy);
+    }
+
+    // Update an existing OT Policy (partial update: only non-null/non-empty fields are updated)
+    public OvertimePolicy updatePolicy(int id, OvertimePolicy updated) {
+        OvertimePolicy existing = overtimePolicyRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Overtime Policy not found"));
+
+        // Only update fields if they are not null / empty / default
+        // For primitives: use a sentinel value (e.g., -1 for int/double) in the DTO/request to indicate "do not change"
+        // For Boolean: use Boolean object instead of primitive to allow null check
+
+        if (updated.getRatePerHour() != 0) existing.setRatePerHour(updated.getRatePerHour());
+        if (updated.getMinHoursPerDay() != 0) existing.setMinHoursPerDay(updated.getMinHoursPerDay());
+        if (updated.getMaxHoursPerDay() != 0) existing.setMaxHoursPerDay(updated.getMaxHoursPerDay());
+        if (updated.getMinHoursPerMonth() != 0) existing.setMinHoursPerMonth(updated.getMinHoursPerMonth());
+        if (updated.getMaxHoursPerMonth() != 0) existing.setMaxHoursPerMonth(updated.getMaxHoursPerMonth());
+
+        // For booleans, you may want to use Boolean objects in your DTO/request, but if not, you can update always
+        existing.setActive(updated.isActive());
+        existing.setOtApplicable(updated.isOtApplicable());
+
+        // Designation update is not allowed here to avoid linking to wrong entity
+
+        return overtimePolicyRepo.save(existing);
+    }
+
+    public OvertimePolicy getPolicyByDesignation(int designationId) {
+        return overtimePolicyRepo.findByDesignationId(designationId)
+                .orElseThrow(() -> new ResourceNotFoundException("OT Policy for this designation not found"));
+    }
+
+    public List<OvertimePolicy> getAllPolicies() {
+        return overtimePolicyRepo.findAll();
+    }
+
+    public OvertimePolicy getPolicyById(int id) {
+        return overtimePolicyRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("OT Policy not found"));
+    }
+}

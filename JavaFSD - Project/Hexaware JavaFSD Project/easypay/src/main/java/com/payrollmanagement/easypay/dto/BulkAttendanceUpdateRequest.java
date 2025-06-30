@@ -1,0 +1,52 @@
+package com.payrollmanagement.easypay.dto;
+
+import java.util.List;
+
+public class BulkAttendanceUpdateRequest {
+	 private List<UpdateRecord> records;
+	 
+	 
+
+	    // getters and setters
+
+	    public List<UpdateRecord> getRecords() {
+		return records;
+	}
+
+
+
+	public void setRecords(List<UpdateRecord> records) {
+		this.records = records;
+	}
+
+
+
+		public static class UpdateRecord {
+	        private Integer id;                // AttendanceRecord ID to update
+	        private Integer totalPayableDays;
+	        private Integer totalWorkingDays;// Field(s) to update
+			public Integer getId() {
+				return id;
+			}
+			public void setId(Integer id) {
+				this.id = id;
+			}
+			public Integer getTotalPayableDays() {
+				return totalPayableDays;
+			}
+			public void setTotalPayableDays(Integer totalPayableDays) {
+				this.totalPayableDays = totalPayableDays;
+			}
+			public Integer getTotalWorkingDays() {
+				return totalWorkingDays;
+			}
+			public void setTotalWorkingDays(Integer totalWorkingDays) {
+				this.totalWorkingDays = totalWorkingDays;
+			}
+
+	        // You can add more fields if you want to allow updating others (month, year, etc.)
+	        // getters and setters
+	        
+	    }
+
+}

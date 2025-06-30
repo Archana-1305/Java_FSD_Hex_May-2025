@@ -1,0 +1,267 @@
+package com.payrollmanagement.easypay.model;
+
+import java.time.LocalDateTime;
+
+import com.payrollmanagement.easypay.enums.PayslipStatus;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "payslips")
+public class Payslip {
+	 @Id
+	    @GeneratedValue(strategy = GenerationType.IDENTITY)
+	    private int id;
+	    @ManyToOne
+	    private Employee employee;
+	    @ManyToOne
+	    private PayrollRun payrollRun;
+	    private int month;
+	    private int year;
+	    // Salary components
+	    private double basicPay;
+	    private double houseRentAllowance;
+	    private double dearnessAllowance;
+	    private double specialAllowance;
+	    private double medicalAllowance;
+	    private double leaveTravelAllowance;
+	    private double foodCoupon;
+	    private double totalMonthlyAllowances;
+	    private double totalReimbursements;
+	    // Deductions
+	    private double providentFund;
+	    private double employeeStateInsurance;
+	    private double taxDeductedAtSource;
+	    private double lossOfPayDeduction;
+	    // Totals
+	    private double grossSalary;
+	    private double totalDeductions;
+	    private double netPay;
+	    private int totalWorkingDays;
+	    private int totalPayableDays;
+	    private LocalDateTime generatedOn;
+	    private LocalDateTime paidOn;
+	    @Enumerated(EnumType.STRING)
+	    private PayslipStatus status;
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public Employee getEmployee() {
+		return employee;
+	}
+
+	public void setEmployee(Employee employee) {
+		this.employee = employee;
+	}
+
+	public PayrollRun getPayrollRun() {
+		return payrollRun;
+	}
+
+	public void setPayrollRun(PayrollRun payrollRun) {
+		this.payrollRun = payrollRun;
+	}
+
+	public int getMonth() {
+		return month;
+	}
+
+	public void setMonth(int month) {
+		this.month = month;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public double getBasicPay() {
+		return basicPay;
+	}
+
+	public void setBasicPay(double basicPay) {
+		this.basicPay = basicPay;
+	}
+
+	public double getHouseRentAllowance() {
+		return houseRentAllowance;
+	}
+
+	public void setHouseRentAllowance(double houseRentAllowance) {
+		this.houseRentAllowance = houseRentAllowance;
+	}
+
+	public double getDearnessAllowance() {
+		return dearnessAllowance;
+	}
+
+	public void setDearnessAllowance(double dearnessAllowance) {
+		this.dearnessAllowance = dearnessAllowance;
+	}
+
+	public double getSpecialAllowance() {
+		return specialAllowance;
+	}
+
+	public void setSpecialAllowance(double specialAllowance) {
+		this.specialAllowance = specialAllowance;
+	}
+
+	public double getMedicalAllowance() {
+		return medicalAllowance;
+	}
+
+	public void setMedicalAllowance(double medicalAllowance) {
+		this.medicalAllowance = medicalAllowance;
+	}
+
+	public double getLeaveTravelAllowance() {
+		return leaveTravelAllowance;
+	}
+
+	public void setLeaveTravelAllowance(double leaveTravelAllowance) {
+		this.leaveTravelAllowance = leaveTravelAllowance;
+	}
+
+	public double getFoodCoupon() {
+		return foodCoupon;
+	}
+
+	public void setFoodCoupon(double foodCoupon) {
+		this.foodCoupon = foodCoupon;
+	}
+
+	public double getTotalMonthlyAllowances() {
+		return totalMonthlyAllowances;
+	}
+
+	public void setTotalMonthlyAllowances(double totalMonthlyAllowances) {
+		this.totalMonthlyAllowances = totalMonthlyAllowances;
+	}
+
+	public double getProvidentFund() {
+		return providentFund;
+	}
+
+	public void setProvidentFund(double providentFund) {
+		this.providentFund = providentFund;
+	}
+
+	public double getEmployeeStateInsurance() {
+		return employeeStateInsurance;
+	}
+
+	public void setEmployeeStateInsurance(double employeeStateInsurance) {
+		this.employeeStateInsurance = employeeStateInsurance;
+	}
+
+	
+
+	public double getTaxDeductedAtSource() {
+		return taxDeductedAtSource;
+	}
+
+	public void setTaxDeductedAtSource(double taxDeductedAtSource) {
+		this.taxDeductedAtSource = taxDeductedAtSource;
+	}
+
+	public double getLossOfPayDeduction() {
+		return lossOfPayDeduction;
+	}
+
+	public void setLossOfPayDeduction(double lossOfPayDeduction) {
+		this.lossOfPayDeduction = lossOfPayDeduction;
+	}
+
+	
+	public double getGrossSalary() {
+		return grossSalary;
+	}
+
+	public void setGrossSalary(double grossSalary) {
+		this.grossSalary = grossSalary;
+	}
+
+	public double getTotalDeductions() {
+		return totalDeductions;
+	}
+
+	public void setTotalDeductions(double totalDeductions) {
+		this.totalDeductions = totalDeductions;
+	}
+
+	public double getNetPay() {
+		return netPay;
+	}
+
+	public void setNetPay(double netPay) {
+		this.netPay = netPay;
+	}
+
+	public int getTotalWorkingDays() {
+		return totalWorkingDays;
+	}
+
+	public void setTotalWorkingDays(int totalWorkingDays) {
+		this.totalWorkingDays = totalWorkingDays;
+	}
+
+	public int getTotalPayableDays() {
+		return totalPayableDays;
+	}
+
+	public void setTotalPayableDays(int totalPayableDays) {
+		this.totalPayableDays = totalPayableDays;
+	}
+
+	public LocalDateTime getGeneratedOn() {
+		return generatedOn;
+	}
+
+	public void setGeneratedOn(LocalDateTime generatedOn) {
+		this.generatedOn = generatedOn;
+	}
+
+	public LocalDateTime getPaidOn() {
+		return paidOn;
+	}
+
+	public void setPaidOn(LocalDateTime paidOn) {
+		this.paidOn = paidOn;
+	}
+
+	public PayslipStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(PayslipStatus status) {
+		this.status = status;
+	}
+
+	public double getTotalReimbursements() {
+		return totalReimbursements;
+	}
+
+	public void setTotalReimbursements(double totalReimbursements) {
+		this.totalReimbursements = totalReimbursements;
+	}
+	
+	
+
+    
+}

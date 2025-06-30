@@ -1,0 +1,61 @@
+package com.payrollmanagement.easypay.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "emp_monthly_allowances")
+public class EmployeeMonthlyAllowances {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+	
+	private double  totalAmount;
+	
+	
+	
+	@ManyToOne
+	private EmployeeAllowance employeeAllowance;
+
+
+
+	public int getId() {
+		return id;
+	}
+
+
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+
+	public double getTotalAmount() {
+		return totalAmount;
+	}
+
+
+
+	public void setTotalAmount(double totalAmount) {
+		this.totalAmount = totalAmount;
+	}
+
+
+
+	public EmployeeAllowance getEmployeeAllowance() {
+		return employeeAllowance;
+	}
+
+
+
+	public void setEmployeeAllowance(EmployeeAllowance employeeAllowance) {
+		this.employeeAllowance = employeeAllowance;
+	}
+
+	
+}

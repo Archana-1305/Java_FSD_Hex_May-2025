@@ -1,0 +1,112 @@
+package com.payrollmanagement.easypay.service;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.enums.RequestStatus;
+import com.payrollmanagement.easypay.exception.AmountExceedsMaximumException;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.ReimbursementRequest;
+import com.payrollmanagement.easypay.model.ReimbursementType;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+import com.payrollmanagement.easypay.repository.ReimbursementRequestRepository;
+import com.payrollmanagement.easypay.repository.ReimbursementTypeRepository;
+
+@Service
+
+public class ReimbursementRequestService {
+	
+	 private  ReimbursementRequestRepository reimbursementRequestRepository;
+	    private  ReimbursementTypeRepository reimbursementTypeRepository;
+	    private EmployeeRepository employeeRepository;
+	    private MonthReimbursementService monthReimbursementService;
+		
+	    	    
+		 
+
+		public ReimbursementRequestService(ReimbursementRequestRepository reimbursementRequestRepository,
+				ReimbursementTypeRepository reimbursementTypeRepository, EmployeeRepository employeeRepository,
+				MonthReimbursementService monthReimbursementService) {
+			super();
+			this.reimbursementRequestRepository = reimbursementRequestRepository;
+			this.reimbursementTypeRepository = reimbursementTypeRepository;
+			this.employeeRepository = employeeRepository;
+			this.monthReimbursementService = monthReimbursementService;
+		}
+
+		// Employee submits reimbursement request
+	    public ReimbursementRequest submitReimbursement(int employeeId, int reimbursementTypeId, ReimbursementRequest request) {
+	        Employee employee = employeeRepository.findById(employeeId)
+	                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+
+	        ReimbursementType type = reimbursementTypeRepository.findById(reimbursementTypeId)
+	                .orElseThrow(() -> new ResourceNotFoundException("ReimbursementType not found"));
+
+	        if (request.getAmount() > type.getMaxAmount()) {
+	            throw new AmountExceedsMaximumException("Amount exceeds the maximum allowed for this reimbursement type");
+	        }
+
+	        request.setEmployee(employee);
+	        request.setReimbursementType(type);
+	        request.setAppliedOn(LocalDate.now());
+	        request.setStatus(RequestStatus.PENDING);
+	        
+	        return reimbursementRequestRepository.save(request);
+	    }
+
+	    // Admin updates status and/or amount
+//	    public ReimbursementRequest updateStatusAndAmount(int requestId, RequestStatus status, Double amount) {
+//	        ReimbursementRequest req = reimbursementRequestRepository.findById(requestId)
+//	                .orElseThrow(() -> new ResourceNotFoundException("Reimbursement request not found"));
+//
+//	        ReimbursementType type = reimbursementTypeRepository.findById(req.getReimbursementType().getId())
+//	                .orElseThrow(() -> new ResourceNotFoundException("ReimbursementType not found"));
+//
+//	        if (amount != null) {
+//	            if (amount > type.getMaxAmount()) {
+//	                throw new AmountExceedsMaximumException("Amount exceeds the maximum allowed for this reimbursement type");
+//	            }
+//	            req.setAmount(amount);
+//	        }
+//
+//	        req.setStatus(status);
+//	        return reimbursementRequestRepository.save(req);
+//	        
+//
+//	        
+//	    }
+	    
+	    public ReimbursementRequest updateStatusAndAmount(int requestId, RequestStatus status, Double amount) {
+	        ReimbursementRequest req = reimbursementRequestRepository.findById(requestId)
+	                .orElseThrow(() -> new ResourceNotFoundException("Reimbursement request not found"));
+
+	        ReimbursementType type = reimbursementTypeRepository.findById(req.getReimbursementType().getId())
+	                .orElseThrow(() -> new ResourceNotFoundException("ReimbursementType not found"));
+
+	        if (amount != null) {
+	            if (amount > type.getMaxAmount()) {
+	                throw new AmountExceedsMaximumException("Amount exceeds the maximum allowed for this reimbursement type");
+	            }
+	            req.setAmount(amount);
+	        }
+
+	        req.setStatus(status);
+	        reimbursementRequestRepository.save(req);
+
+	        // --- Auto-update MonthReimbursement if approved ---
+	        if (status == RequestStatus.APPROVED) {
+	            monthReimbursementService.calculateAndSaveTotalReimbursement(
+	                req.getEmployee().getId(), req.getMonth(), req.getYear()
+	            );
+	        }
+
+	        return req;
+	    }
+
+		
+	    
+
+}

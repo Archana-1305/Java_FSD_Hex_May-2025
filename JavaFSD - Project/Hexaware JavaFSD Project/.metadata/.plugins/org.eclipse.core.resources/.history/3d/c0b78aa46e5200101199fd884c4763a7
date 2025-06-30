@@ -1,0 +1,47 @@
+package com.payrollmanagement.easypay.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.model.AttendanceRecord;
+import com.payrollmanagement.easypay.service.AttendanceRecordService;
+
+@RestController
+@RequestMapping("/api/attendance-records")
+@CrossOrigin(origins = "http://localhost:5173")
+public class AttendanceRecordController {
+
+    @Autowired
+    private AttendanceRecordService attendanceRecordService;
+
+    @PostMapping("/add/{employeeId}")
+    public ResponseEntity<AttendanceRecord> createAttendanceRecord(@PathVariable int employeeId,
+                                                                   @RequestBody AttendanceRecord attendanceRecord) {
+        return ResponseEntity.status(201)
+                .body(attendanceRecordService.createAttendanceRecord(employeeId, attendanceRecord));
+    }
+    @GetMapping("/{id}")
+    public ResponseEntity<AttendanceRecord> getAttendanceRecordById(@PathVariable int id) {
+        return ResponseEntity.ok(attendanceRecordService.getAttendanceRecordById(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<AttendanceRecord>> getAllAttendanceRecords() {
+        return ResponseEntity.ok(attendanceRecordService.getAllAttendanceRecords());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AttendanceRecord> updateAttendanceRecord(@PathVariable int id, @RequestBody AttendanceRecord updatedRecord) {
+        return ResponseEntity.ok(attendanceRecordService.updateAttendanceRecord(id, updatedRecord));
+    }
+}

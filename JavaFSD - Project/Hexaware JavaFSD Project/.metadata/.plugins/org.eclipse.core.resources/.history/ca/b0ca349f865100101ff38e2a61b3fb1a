@@ -1,0 +1,130 @@
+package com.payrollmanagement.easypay.service;
+
+import com.payrollmanagement.easypay.enums.RequestStatus;
+import com.payrollmanagement.easypay.exception.InvalidLeaveRequestException;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.*;
+import com.payrollmanagement.easypay.repository.*;
+
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.*;
+
+@Service
+public class LeaveRequestService {
+
+    private final LeaveRequestRepository leaveRequestRepository;
+    private final EmployeeRepository employeeRepository;
+    private final LeaveTypesRepository leaveTypesRepository;
+    private final BlockedDayRepository blockedDayRepository;
+
+    public LeaveRequestService(
+            LeaveRequestRepository leaveRequestRepository,
+            EmployeeRepository employeeRepository,
+            LeaveTypesRepository leaveTypesRepository,
+            BlockedDayRepository blockedDayRepository) {
+        this.leaveRequestRepository = leaveRequestRepository;
+        this.employeeRepository = employeeRepository;
+        this.leaveTypesRepository = leaveTypesRepository;
+        this.blockedDayRepository = blockedDayRepository;
+    }
+
+    public LeaveRequest applyForLeave(int employeeId, int leaveTypeId, int approverId, LeaveRequest leaveRequest) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+        LeaveTypes leaveType = leaveTypesRepository.findById(leaveTypeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave type not found"));
+        Employee approver = employeeRepository.findById(approverId)
+                .orElseThrow(() -> new ResourceNotFoundException("Approver not found"));
+
+        LocalDate start = leaveRequest.getStartDate();
+        LocalDate end = leaveRequest.getEndDate();
+
+        if (start == null || end == null || end.isBefore(start)) {
+            throw new InvalidLeaveRequestException("Invalid start or end date");
+        }
+
+        // 1. Blocked days cannot be selected
+        List<BlockedDay> blockedDays = blockedDayRepository.findByCompanyId(employee.getCompany().getId());
+        Set<LocalDate> blockedDates = new HashSet<>();
+        for (BlockedDay bd : blockedDays) blockedDates.add(bd.getDate());
+        for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
+            if (blockedDates.contains(d)) {
+                throw new InvalidLeaveRequestException("Selected dates include a blocked holiday: " + d);
+            }
+        }
+
+        // 2. Overlapping leaves
+		/*
+		 * List<LeaveRequest> existing =
+		 * leaveRequestRepository.findActiveByEmployee(employeeId, start, end); if
+		 * (!existing.isEmpty()) { throw new
+		 * InvalidLeaveRequestException("You already have a leave application during this period."
+		 * ); }
+		 */
+
+        // 3. Quota check
+        int daysRequested = (int) (end.toEpochDay() - start.toEpochDay()) + 1;
+        int usedLeaves = leaveRequestRepository.countApprovedLeavesForType(employeeId, leaveTypeId, start.getYear());
+        if (usedLeaves + daysRequested > leaveType.getAnnualQuota()) {
+            throw new InvalidLeaveRequestException("Leave quota exceeded for " + leaveType.getName());
+        }
+
+        leaveRequest.setEmployee(employee);
+        leaveRequest.setLeaveType(leaveType);
+        leaveRequest.setApprover(approver);
+        leaveRequest.setStatus(RequestStatus.PENDING);
+        leaveRequest.setAppliedOn(LocalDate.now());
+
+        return leaveRequestRepository.save(leaveRequest);
+    }
+
+    public LeaveRequest getLeaveRequestById(int id) {
+        return leaveRequestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave Request Not Found"));
+    }
+
+    public List<LeaveRequest> getAllLeaveRequests() {
+        return leaveRequestRepository.findAll();
+    }
+
+    public List<LeaveRequest> getLeaveRequestsByEmployee(int employeeId) {
+        return leaveRequestRepository.findByEmployeeId(employeeId);
+    }
+
+//    public int getRemainingLeave(int employeeId, int year, int leaveTypeId) {
+//        LeaveTypes leaveType = leaveTypesRepository.findById(leaveTypeId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Leave type not found"));
+//        int used = leaveRequestRepository.countApprovedLeavesForType(employeeId, leaveTypeId, year);
+//        int remaining = leaveType.getAnnualQuota() - used;
+//        return Math.max(remaining, 0);
+//    }
+
+ // --- UPDATE METHOD ---
+    public LeaveRequest updateLeaveRequest(int leaveRequestId, LeaveRequest updatedLeaveRequest) {
+        Optional<LeaveRequest> opt = leaveRequestRepository.findById(leaveRequestId);
+        if (opt.isPresent()) {
+            LeaveRequest lr = opt.get();
+
+            // Example: Only allow updating reason and dates if status is PENDING
+            if (lr.getStatus() != RequestStatus.PENDING) {
+                throw new InvalidLeaveRequestException("Only pending requests can be updated.");
+            }
+
+            // Update allowed fields
+            if (updatedLeaveRequest.getStartDate() != null && updatedLeaveRequest.getEndDate() != null) {
+                lr.setStartDate(updatedLeaveRequest.getStartDate());
+                lr.setEndDate(updatedLeaveRequest.getEndDate());
+            }
+            if (updatedLeaveRequest.getReason() != null) {
+                lr.setReason(updatedLeaveRequest.getReason());
+            }
+            // Optionally allow changing leave type or approver if needed
+
+            return leaveRequestRepository.save(lr);
+        } else {
+            throw new ResourceNotFoundException("Leave Request Not Found");
+        }
+    }
+}

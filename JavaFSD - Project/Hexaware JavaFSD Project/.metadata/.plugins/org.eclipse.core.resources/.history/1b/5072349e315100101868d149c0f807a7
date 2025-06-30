@@ -1,0 +1,136 @@
+package com.payrollmanagement.easypay.model;
+
+import com.payrollmanagement.easypay.enums.EmpStatus;
+import com.payrollmanagement.easypay.enums.EmployeeType;
+import com.payrollmanagement.easypay.enums.Gender;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "employees")
+public class Employee {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+
+	private String employeeCode;
+	private String first_name;
+	private String last_name;
+
+	@Enumerated(EnumType.STRING)
+	private Gender gender;
+
+	private String email; // Official company email
+	private String contact;
+	private String address;
+	private String dob; // Date of Birth as String
+
+	@Enumerated(EnumType.STRING)
+	private EmployeeType emp_type;
+
+	private String date_of_joining;
+	private String date_of_leaving;
+
+	@Enumerated(EnumType.STRING)
+	private EmpStatus status;
+
+	private double ctcAmount;
+
+	private String bankName;
+	private String accountNumber;
+	private String ifscCode;
+	
+	 private Boolean isDelete = false; 
+
+	@OneToOne
+	private User user;
+
+	@ManyToOne
+	private Designation designation;
+
+	@ManyToOne
+	private Department department;
+	
+	@ManyToOne
+    private CompanyLocation workLocation;
+	
+	@ManyToOne
+    private Company company;
+
+	public int getId() { return id; }
+	public void setId(int id) { this.id = id; }
+
+	public String getEmployeeCode() { return employeeCode; }
+	public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
+
+	public String getFirst_name() { return first_name; }
+	public void setFirst_name(String first_name) { this.first_name = first_name; }
+
+	public String getLast_name() { return last_name; }
+	public void setLast_name(String last_name) { this.last_name = last_name; }
+
+	public Gender getGender() { return gender; }
+	public void setGender(Gender gender) { this.gender = gender; }
+
+	public String getEmail() { return email; }
+	public void setEmail(String email) { this.email = email; }
+
+	public String getContact() { return contact; }
+	public void setContact(String contact) { this.contact = contact; }
+
+	public String getAddress() { return address; }
+	public void setAddress(String address) { this.address = address; }
+
+	public String getDob() { return dob; }
+	public void setDob(String dob) { this.dob = dob; }
+
+	public EmployeeType getEmp_type() { return emp_type; }
+	public void setEmp_type(EmployeeType emp_type) { this.emp_type = emp_type; }
+
+	public String getDate_of_joining() { return date_of_joining; }
+	public void setDate_of_joining(String date_of_joining) { this.date_of_joining = date_of_joining; }
+
+	public String getDate_of_leaving() { return date_of_leaving; }
+	public void setDate_of_leaving(String date_of_leaving) { this.date_of_leaving = date_of_leaving; }
+
+	public EmpStatus getStatus() { return status; }
+	public void setStatus(EmpStatus status) { this.status = status; }
+
+	public double getCtcAmount() { return ctcAmount; }
+	public void setCtcAmount(double ctcAmount) { this.ctcAmount = ctcAmount; }
+
+	public String getBankName() { return bankName; }
+	public void setBankName(String bankName) { this.bankName = bankName; }
+
+	public String getAccountNumber() { return accountNumber; }
+	public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+
+	public String getIfscCode() { return ifscCode; }
+	public void setIfscCode(String ifscCode) { this.ifscCode = ifscCode; }
+
+	public User getUser() { return user; }
+	public void setUser(User user) { this.user = user; }
+
+	public Designation getDesignation() { return designation; }
+	public void setDesignation(Designation designation) { this.designation = designation; }
+
+	public Department getDepartment() { return department; }
+	public void setDepartment(Department department) { this.department = department; }
+
+	public CompanyLocation getWorkLocation() { return workLocation; }
+	public void setWorkLocation(CompanyLocation workLocation) { this.workLocation = workLocation; }
+
+	public Company getCompany() { return company; }
+	public void setCompany(Company company) { this.company = company; }
+	
+	 public Boolean getIsDelete() { return isDelete; }
+	 public void setIsDelete(Boolean isDelete) { this.isDelete = isDelete; }
+}

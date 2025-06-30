@@ -1,0 +1,63 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+
+@Service
+public class CompanyService {
+	
+	private CompanyRepository companyRepository;
+
+	public CompanyService(CompanyRepository companyRepository) {
+		this.companyRepository = companyRepository;
+	}
+	
+    // Add Company Details
+	public Company addCompany(Company company) {
+		return companyRepository.save(company);
+	}
+    
+	// Get Company Details By Id
+	public Company getCompanyById(int id) {
+		return companyRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));	 
+	}
+    
+	// Update Company Details
+	public Company updateCompany(int id, Company updatedCompany) {
+		
+		// To check if the Id is Valid
+		Company cmp = companyRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Company Id Invalid"));
+
+		// To update details
+		if (updatedCompany.getName() != null)
+			cmp.setName(updatedCompany.getName());
+		
+		if (updatedCompany.getPan() != null)
+			cmp.setPan(updatedCompany.getPan());
+
+		if (updatedCompany.getTan() != null)
+			cmp.setTan(updatedCompany.getTan());
+
+		if (updatedCompany.getEmail() != null)
+			cmp.setEmail(updatedCompany.getEmail());
+
+		if (updatedCompany.getWebsite() != null)
+			cmp.setWebsite(updatedCompany.getWebsite());
+
+		// Saving changes to Database
+		return companyRepository.save(cmp);
+	}
+
+	public List<Company> getAll() {		
+		return companyRepository.findAll();
+	}
+	
+
+}

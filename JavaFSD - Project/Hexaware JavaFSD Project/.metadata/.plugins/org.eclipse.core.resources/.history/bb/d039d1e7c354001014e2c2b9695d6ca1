@@ -1,0 +1,59 @@
+package com.payrollmanagement.easypay.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.dto.MonthlyTotalNetPayDto;
+import com.payrollmanagement.easypay.enums.PayslipStatus;
+import com.payrollmanagement.easypay.model.Payslip;
+import com.payrollmanagement.easypay.repository.PayslipRepository;
+import com.payrollmanagement.easypay.service.PayslipService;
+
+@RestController
+@RequestMapping("/api/payslips")
+public class PayslipController {
+   
+    @Autowired
+    private PayslipService payslipService;
+
+    @GetMapping("/bypayrollrun/{payrollRunId}")
+    public ResponseEntity<?> getPayslipsByPayrollRun(@PathVariable int payrollRunId) {
+        return ResponseEntity.ok(payslipService.getPayslipsByPayrollRun(payrollRunId));
+    }
+
+//    @GetMapping("/employee/{employeeId}")
+//    public ResponseEntity<List<Payslip>> getPayslipsByEmployee(@PathVariable int employeeId, @RequestParam int month, @RequestParam int year) {
+//        return ResponseEntity.ok(payslipRepository.findByEmployeeIdAndMonthAndYear(employeeId, month, year));
+//    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Payslip> updateStatus(@PathVariable int id, @RequestParam PayslipStatus status) {
+        Payslip payslip = payslipService.updateStatus(id, status);
+        return ResponseEntity.ok(payslip);
+    }
+    
+    @PutMapping("/status")
+    public ResponseEntity<String> updatePayslipStatus(
+            @RequestParam String status,
+            @RequestBody List<Integer> payslipIds) {
+        payslipService.updatePayslipStatus(payslipIds, status);
+        return ResponseEntity.ok("Payslip statuses updated successfully.");
+    }
+    
+    @GetMapping("/stats/monthly-approved-netpay")
+    public ResponseEntity<?> getMonthlyApprovedNetPayStats() {
+        List<MonthlyTotalNetPayDto> stats = payslipService.getApprovedMonthlyNetPayStats();
+        return ResponseEntity.ok(stats);
+    }
+    
+    
+}

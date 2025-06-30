@@ -1,0 +1,24 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.model.EmployeeMonthlyAllowances;
+import com.payrollmanagement.easypay.model.Allowances;
+import com.payrollmanagement.easypay.model.Employee;
+
+public interface EmployeeMonthlyAllowancesRepository extends JpaRepository<EmployeeMonthlyAllowances, Integer> {
+
+    @Query("SELECT e FROM EmployeeMonthlyAllowances e WHERE e.employee.id=?1 AND e.allowances.id=?2")
+    List<EmployeeMonthlyAllowances> findByEmployeeAndAllowance(int employeeId, int allowanceId);
+
+    @Query("SELECT e FROM EmployeeMonthlyAllowances e WHERE e.employee.id=?1")
+    List<EmployeeMonthlyAllowances> findByEmployeeId(int employeeId);
+
+    @Query("SELECT e FROM EmployeeMonthlyAllowances e WHERE e.allowances.id=?1")
+    List<EmployeeMonthlyAllowances> findByAllowanceId(int allowanceId);
+
+    // For payroll calculation, filter by employee and month (if you have payroll period fields)
+}

@@ -1,0 +1,13 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.payrollmanagement.easypay.model.Payslip;
+
+public interface PayslipRepository extends JpaRepository<Payslip, Integer> {
+	List<Payslip> findByPayrollRunId(int payrollRunId);
+    List<Payslip> findByEmployeeIdAndMonthAndYear(int employeeId, int month, int year);
+
+}

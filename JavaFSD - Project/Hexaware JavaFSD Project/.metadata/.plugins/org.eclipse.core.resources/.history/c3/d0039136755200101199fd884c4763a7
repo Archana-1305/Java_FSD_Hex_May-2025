@@ -1,0 +1,58 @@
+package com.payrollmanagement.easypay.service;
+
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.AttendanceRecord;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.repository.AttendanceRecordRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class AttendanceRecordService {
+
+    
+    private AttendanceRecordRepository attendanceRecordRepository;
+    private EmployeeRepository employeeRepository;
+
+   
+
+    public AttendanceRecordService(AttendanceRecordRepository attendanceRecordRepository,
+			EmployeeRepository employeeRepository) {
+		super();
+		this.attendanceRecordRepository = attendanceRecordRepository;
+		this.employeeRepository = employeeRepository;
+	}
+	public AttendanceRecord createAttendanceRecord(int employeeId, AttendanceRecord attendanceRecord) {
+        Employee employee = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + employeeId));
+
+        attendanceRecord.setEmployee(employee); 
+
+        return attendanceRecordRepository.save(attendanceRecord);
+    }
+    public AttendanceRecord getAttendanceRecordById(int id) {
+        return attendanceRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("AttendanceRecord not found"));
+    }
+
+    public List<AttendanceRecord> getAllAttendanceRecords() {
+        return attendanceRecordRepository.findAll();
+    }
+
+    public AttendanceRecord updateAttendanceRecord(int id, AttendanceRecord updatedRecord) {
+        AttendanceRecord existing = attendanceRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("AttendanceRecord not found"));
+        existing.setYear(updatedRecord.getYear());
+        existing.setMonth(updatedRecord.getMonth());
+        existing.setTotalWorkingDays(updatedRecord.getTotalWorkingDays());
+        existing.setTotalPayableDays(updatedRecord.getTotalPayableDays());
+        existing.setEmployee(updatedRecord.getEmployee());
+        return attendanceRecordRepository.save(existing);
+    }
+    
+ 
+}

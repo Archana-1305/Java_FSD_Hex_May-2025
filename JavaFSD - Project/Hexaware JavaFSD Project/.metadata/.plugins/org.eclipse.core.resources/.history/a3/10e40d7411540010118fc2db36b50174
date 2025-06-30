@@ -1,0 +1,36 @@
+package com.payrollmanagement.easypay.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.enums.PayrollRunStatus;
+import com.payrollmanagement.easypay.model.PayrollRun;
+import com.payrollmanagement.easypay.service.PayrollRunService;
+
+@RestController
+@RequestMapping("/api/payroll")
+@CrossOrigin(origins = "http://localhost:5173")
+public class PayrollRunController {
+    @Autowired
+    private PayrollRunService payrollRunService;
+
+    @PostMapping("/run")
+    public ResponseEntity<PayrollRun> runPayroll(@RequestParam int month, @RequestParam int year, @RequestParam int policyId,@RequestBody PayrollRun payrollRun) {
+        PayrollRun run = payrollRunService.executePayrollRun(month, year, policyId,payrollRun);
+        return ResponseEntity.ok(run);
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<PayrollRun> updateStatus(@PathVariable int id, @RequestParam PayrollRunStatus status) {
+        PayrollRun run = payrollRunService.updateStatus(id, status);
+        return ResponseEntity.ok(run);
+    }
+}

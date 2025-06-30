@@ -1,0 +1,21 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.model.BlockedDay;
+import com.payrollmanagement.easypay.model.Company;
+
+public interface BlockedDayRepository extends JpaRepository<BlockedDay, Integer> {
+
+	@Query("Select bd from BlockedDay bd where bd.company.id=?1 ")
+	List<BlockedDay> getBlockedDaysByCompanyId(Company company);
+
+	boolean existsByCompanyIdAndDate(int companyId, LocalDate date);
+
+	List<BlockedDay> findByCompanyId(int id);
+
+}

@@ -1,0 +1,62 @@
+package com.payrollmanagement.easypay.controller;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.model.EmployeeAllowance;
+
+import com.payrollmanagement.easypay.service.EmployeeAllowanceService;
+
+@RestController
+@RequestMapping("/api/employeeAllowance")
+@CrossOrigin(origins = "http://localhost:5173")
+public class EmployeeAllowanceController {
+
+    @Autowired
+    private EmployeeAllowanceService employeeAllowanceService;
+
+    private Logger logger = LoggerFactory.getLogger("EmployeeAllowanceController");
+
+    /* AIM      : Assign Allowances to an Employee
+     * PATH     : /api/employeeAllowance/assign/{empId}/{month}/{year}
+     * METHOD   : POST
+     * PARAM    : empId, month, year, @RequestBody List<EmployeeAllowanceItem>
+     * RESPONSE : Saved EmployeeAllowance
+     * */
+    @PostMapping("/assign/{empId}/{month}/{year}")
+    public ResponseEntity<?> assignAllowances(@PathVariable int employeeId,
+                                              @PathVariable int allowanceId,
+                                              @RequestBody EmployeeAllowance employeeAllowance   
+                                             ) {
+        logger.info("Assigning allowances to Emp ID: " + employeeId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employeeAllowanceService.assignAllowances(employeeId, allowanceId, employeeAllowance));
+    }
+
+    /* AIM      : Get Allowance by Employee, Month, Year
+     * PATH     : /api/employeeAllowance/get/{empId}/{month}/{year}
+     * METHOD   : GET
+     * RESPONSE : EmployeeAllowance
+     * */
+    @GetMapping("/get/{empId}/{month}/{year}")
+    public ResponseEntity<?> getAllowanceSummary(@PathVariable int empId,
+                                                 @PathVariable int month,
+                                                 @PathVariable int year) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employeeAllowanceService.getByEmpMonthYear(empId, month, year));
+    }
+}

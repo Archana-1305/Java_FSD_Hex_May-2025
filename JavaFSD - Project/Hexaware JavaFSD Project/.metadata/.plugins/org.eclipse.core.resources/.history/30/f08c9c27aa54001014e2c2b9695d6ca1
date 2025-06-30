@@ -1,0 +1,344 @@
+package com.payrollmanagement.easypay.service;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.enums.EmpStatus;
+import com.payrollmanagement.easypay.enums.PayrollRunStatus;
+import com.payrollmanagement.easypay.enums.PayslipStatus;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Department;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.PayrollPolicy;
+import com.payrollmanagement.easypay.model.PayrollRun;
+import com.payrollmanagement.easypay.model.Payslip;
+import com.payrollmanagement.easypay.repository.AttendanceRecordRepository;
+import com.payrollmanagement.easypay.repository.DepartmentRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+import com.payrollmanagement.easypay.repository.PayrollPolicyRepository;
+import com.payrollmanagement.easypay.repository.PayrollRunRepository;
+import com.payrollmanagement.easypay.repository.PayslipRepository;
+
+@Service
+public class PayrollRunService {
+
+//   // @Autowired private PayrollRunRepository payrollRunRepository;
+//   // @Autowired private EmployeeRepository employeeRepository;
+//    @Autowired private AttendanceRecordRepository attendanceRecordRepository;
+//    @Autowired private EmployeeMonthlyAllowancesRepository employeeMonthlyAllowancesRepository;
+//    @Autowired private PayrollPolicyRepository payrollPolicyRepository;
+//   // @Autowired private PayslipService payslipService;
+//    @Autowired private IncomeTaxSlabRepository incomeTaxSlabRepository;
+    
+    private PayrollRunRepository payrollRunRepository;
+    private EmployeeRepository employeeRepository;
+    private PayslipService payslipService;
+    private DepartmentRepository departmentRepository;
+    private PayrollPolicyRepository payrollPolicyRepository;
+    private AttendanceRecordRepository attendanceRecordRepository;
+    private PayslipRepository payslipRepository;
+    
+    
+    
+
+
+public PayrollRunService(PayrollRunRepository payrollRunRepository, EmployeeRepository employeeRepository,
+			PayslipService payslipService, DepartmentRepository departmentRepository,
+			PayrollPolicyRepository payrollPolicyRepository, AttendanceRecordRepository attendanceRecordRepository,
+			PayslipRepository payslipRepository) {
+		super();
+		this.payrollRunRepository = payrollRunRepository;
+		this.employeeRepository = employeeRepository;
+		this.payslipService = payslipService;
+		this.departmentRepository = departmentRepository;
+		this.payrollPolicyRepository = payrollPolicyRepository;
+		this.attendanceRecordRepository = attendanceRecordRepository;
+		this.payslipRepository = payslipRepository;
+	}
+
+public PayrollRun executePayrollRun(int month, int year, int payrollPolicyId) {
+       PayrollRun payrollRun = new PayrollRun();
+       payrollRun.setMonth(month);
+       payrollRun.setYear(year);
+       payrollRun.setExecutionDate(LocalDate.now());
+       payrollRun.setStatus(PayrollRunStatus.PENDING);
+        PayrollPolicy policy = payrollPolicyRepository.findById(payrollPolicyId)
+                .orElseThrow(() -> new RuntimeException("Payroll Policy not found"));
+        payrollRun.setPayrollPolicy(policy);
+      payrollRunRepository.save(payrollRun);
+        List<Employee> employees = employeeRepository.findByStatus(EmpStatus.ACTIVE);
+      for (Employee emp : employees) {
+          payslipService.generatePayslipForEmployee(emp, month, year, payrollRun, policy);
+       }
+       return payrollRun;
+   }
+  public PayrollRun updateStatus(int payrollRunId, PayrollRunStatus status) {
+      Optional<PayrollRun> optionalRun = payrollRunRepository.findById(payrollRunId);
+      if (optionalRun.isPresent()) {
+           PayrollRun run = optionalRun.get();
+         run.setStatus(status);
+          return payrollRunRepository.save(run);
+        }
+        throw new RuntimeException("PayrollRun not found");
+   }
+    
+//    public PayrollRun executePayrollRun(int month, int year, int payrollPolicyId, PayrollRun payrollRun) {
+//        
+//    	PayrollPolicy policy = payrollPolicyRepository.findById(payrollPolicyId)
+//                .orElseThrow(() -> new RuntimeException("Payroll Policy not found"));
+//        payrollRun.setPayrollPolicy(policy);
+//        
+//        payrollRun.setMonth(month);
+//        payrollRun.setYear(year);
+//        payrollRun.setExecutionDate(LocalDate.now());
+//        payrollRun.setStatus(PayrollRunStatus.PENDING);
+//        
+//        payrollRunRepository.save(payrollRun);
+//
+//        List<Employee> employees = employeeRepository.findByStatus(EmpStatus.ACTIVE);
+//        for (Employee emp : employees) {
+//            payslipService.generatePayslipForEmployee(emp, month, year, payrollRun, policy);
+//        }
+//        return payrollRun;
+//    }
+
+//    public PayrollRun updateStatus(int payrollRunId, PayrollRunStatus status) {
+//        Optional<PayrollRun> optionalRun = payrollRunRepository.findById(payrollRunId);
+//        if (optionalRun.isPresent()) {
+//            PayrollRun run = optionalRun.get();
+//            run.setStatus(status);
+//            return payrollRunRepository.save(run);
+//        }
+//        throw new RuntimeException("PayrollRun not found");
+//    }
+  
+  
+//  public PayrollRun executePayrollRunByDepartment(int month, int year, int payrollPolicyId, int departmentId) {
+//	    PayrollRun payrollRun = new PayrollRun();
+//	    payrollRun.setMonth(month);
+//	    payrollRun.setYear(year);
+//	    payrollRun.setExecutionDate(LocalDate.now());
+//	    payrollRun.setStatus(PayrollRunStatus.PENDING);
+//
+//	    PayrollPolicy policy = payrollPolicyRepository.findById(payrollPolicyId)
+//	            .orElseThrow(() -> new RuntimeException("Payroll Policy not found"));
+//	    payrollRun.setPayrollPolicy(policy);
+//	    payrollRunRepository.save(payrollRun);
+//
+//	    // Fetch only active employees in the specified department
+//	   // List<Employee> employees = employeeRepository.getByStatusAndDepartmentId(EmpStatus.ACTIVE, departmentId);
+//	    List<Employee> employees = employeeRepository.getByStatusAndDepartmentId(EmpStatus.ACTIVE, departmentId);
+//
+//
+//	    for (Employee emp : employees) {
+//	        payslipService.generatePayslipForEmployee(emp, month, year, payrollRun, policy);
+//	    }
+//
+//	    return payrollRun;
+//	}
+  
+  
+//  
+//  public PayrollRun executePayrollRunByDepartment(int month, int year, int payrollPolicyId, int departmentId) {
+//	    // Get the current year and month
+//	    LocalDate now = LocalDate.now();
+//	    int currentYear = now.getYear();
+//	    int currentMonth = now.getMonthValue();
+//	    
+//	    // Check month value
+//	    if (month < 1 || month > 12) {
+//	        throw new IllegalArgumentException("Invalid month value. Month must be between 1 and 12.");
+//	    }
+//	    
+//
+//	    // Validation: Only allow running for previous months (not current or future)
+//	    if (year > currentYear || (year == currentYear && month >= currentMonth)) {
+//	        throw new IllegalArgumentException("Cannot run payroll for current or future months.");
+//	    }
+//
+//	    PayrollRun payrollRun = new PayrollRun();
+//	    payrollRun.setMonth(month);
+//	    payrollRun.setYear(year);
+//	    
+//	    PayrollPolicy policy = payrollPolicyRepository.findById(payrollPolicyId)
+//	            .orElseThrow(() -> new RuntimeException("Payroll Policy not found"));
+//	    payrollRun.setPayrollPolicy(policy);
+//	    
+//	    Department dept= departmentRepository.findById(departmentId)
+//	    		.orElseThrow(() -> new RuntimeException("Department not found"));
+//	    payrollRun.setDepartment(dept);
+//	    
+//	 
+//	   // List<Employee> employees = employeeRepository.getByStatusAndDepartmentId(EmpStatus.ACTIVE, departmentId);
+//	    
+//	    
+//	    
+//	    
+//	   // Optional<PayrollRun> existingRun = payrollRunRepository.findActiveRun(year, month, departmentId, PayrollRunStatus.REVISED);
+//	    Optional<PayrollRun> existingRun = payrollRunRepository.getActiveRun(year, month, departmentId, PayrollRunStatus.REVISE);
+//	    if (existingRun.isPresent()) {
+//	        throw new IllegalStateException("Payroll already run for this period and department. Please revise the existing run to proceed.");
+//	    }
+//	    
+//	    payrollRun.setExecutionDate(now);
+//	    payrollRun.setStatus(PayrollRunStatus.PENDING);
+//
+//	   
+//	    payrollRunRepository.save(payrollRun);
+//
+//	 // Fetch employees
+//	    List<Employee> employees = employeeRepository.getByStatusAndDepartmentId(EmpStatus.ACTIVE, departmentId);
+//	    if (employees.isEmpty()) {
+//	        throw new IllegalStateException("No active employees found in the department for the given period.");
+//	    }
+//
+////	    for (Employee emp : employees) {
+////	        payslipService.generatePayslipForEmployee(emp, month, year, payrollRun, policy);
+////	    }
+//	    
+//	    for (Employee emp : employees) {
+//	        boolean attendanceExists = attendanceRecordRepository.existsByEmployeeIdAndYearAndMonth(emp.getId(), year, month);
+//	        if (!attendanceExists) {
+//	        	 payrollRun.setStatus(PayrollRunStatus.REVISE);
+//	        	// emp.setStatus(EmpStatus.REVISE);
+//	            employeeRepository.save(emp); // Save status update
+//	            continue; // Optionally skip payroll generation for this employee
+//	        }
+//	        
+//	        payslipService.generatePayslipForEmployee(emp, month, year, payrollRun, policy);
+//	    }
+//	    
+//	    return payrollRun;
+//	}
+//  
+//  
+  
+  
+  
+  
+  public PayrollRun executePayrollRunByDepartment(int month, int year, int payrollPolicyId, int departmentId) {
+	    // Get the current year and month
+	    LocalDate now = LocalDate.now();
+	    int currentYear = now.getYear();
+	    int currentMonth = now.getMonthValue();
+
+	    // Check month value
+	    if (month < 1 || month > 12) {
+	        throw new IllegalArgumentException("Invalid month value. Month must be between 1 and 12.");
+	    }
+
+	    // Validation: Only allow running for previous months (not current or future)
+	    if (year > currentYear || (year == currentYear && month >= currentMonth)) {
+	        throw new IllegalArgumentException("Cannot run payroll for current or future months.");
+    }
+
+	    PayrollPolicy policy = payrollPolicyRepository.findById(payrollPolicyId)
+	            .orElseThrow(() -> new RuntimeException("Payroll Policy not found"));
+
+	    Department dept = departmentRepository.findById(departmentId)
+	            .orElseThrow(() -> new RuntimeException("Department not found"));
+
+	    Optional<PayrollRun> existingRun = payrollRunRepository.getActiveRun(year, month, departmentId, PayrollRunStatus.REVISE);
+	    if (existingRun.isPresent()) {
+	        throw new IllegalStateException("Payroll already run for this period and department. Please revise the existing run to proceed.");
+	    }
+
+	    // Fetch employees
+	    List<Employee> employees = employeeRepository.getByStatusAndDepartmentId(EmpStatus.ACTIVE, departmentId);
+	    if (employees.isEmpty()) {
+	        throw new IllegalStateException("No active employees found in the department for the given period.");
+	    }
+
+    // Check attendance for all employees before creating PayrollRun
+    List<Integer> missingAttendanceEmpIds = new ArrayList<>();
+    for (Employee emp : employees) {
+        boolean attendanceExists = attendanceRecordRepository.existsByEmployeeIdAndYearAndMonth(emp.getId(), year, month);
+        if (!attendanceExists) {
+            missingAttendanceEmpIds.add(emp.getId());
+	        }
+	    }
+
+    if (!missingAttendanceEmpIds.isEmpty()) {
+        throw new IllegalStateException(
+            "Attendance details are not completed for all employees. Missing for employee IDs: " + missingAttendanceEmpIds
+	        );
+    }
+
+	    // If all attendance found, create and save PayrollRun
+	    PayrollRun payrollRun = new PayrollRun();
+	    payrollRun.setMonth(month);
+	    payrollRun.setYear(year);
+	    payrollRun.setPayrollPolicy(policy);
+	    payrollRun.setDepartment(dept);
+	    payrollRun.setExecutionDate(now);
+	    payrollRun.setStatus(PayrollRunStatus.PENDING);
+
+	    payrollRunRepository.save(payrollRun);
+
+	    for (Employee emp : employees) {
+	        payslipService.generatePayslipForEmployee(emp, month, year, payrollRun, policy);
+	    }
+	    return payrollRun;
+	    
+
+	} // latest
+  
+  
+  public PayrollRun revisePayroll(int month, int year, int departmentId) {
+	    // 1. Find existing PayrollRun (do not create a new one!)
+	    Optional<PayrollRun> payrollRunOpt = payrollRunRepository.getByMonthAndYearAndDepartmentId(month, year, departmentId);
+	    if (!payrollRunOpt.isPresent()) {
+	        throw new IllegalStateException("No payroll run found for the given period and department. Please run payroll first.");
+	    }
+	    PayrollRun payrollRun = payrollRunOpt.get();
+	    PayrollPolicy policy = payrollRun.getPayrollPolicy();
+
+	    // 2. Get all active employees in the department
+	    List<Employee> employees = employeeRepository.getByStatusAndDepartmentId(EmpStatus.ACTIVE, departmentId);
+
+	    // 3. Track if any payslip was revised
+	    boolean revisedAny = false;
+
+	    for (Employee emp : employees) {
+	        // 4. Find the payslip for this employee and payroll run
+	        Optional<Payslip> payslipOpt = payslipRepository.findByEmployeeIdAndPayrollRunId(emp.getId(), payrollRun.getId());
+	        if (payslipOpt.isPresent()) {
+	            Payslip payslip = payslipOpt.get();
+	            // 5. Only allow revise if payslip status is REVISE or ON_HOLD
+	            if (payslip.getStatus() == PayslipStatus.REVISE || payslip.getStatus() == PayslipStatus.ON_HOLD) {
+	                // 6. Check attendance
+	                boolean attendanceExists = attendanceRecordRepository.existsByEmployeeIdAndYearAndMonth(emp.getId(), year, month);
+	                if (!attendanceExists) {
+	                    throw new IllegalStateException("Attendance missing for employee: " + emp.getEmployeeCode());
+	                }
+	                // 7. Delete and regenerate payslip
+	                payslipRepository.delete(payslip);
+	                payslipService.generatePayslipForEmployee(emp, month, year, payrollRun, policy);
+	                revisedAny = true;
+	            }
+	        }
+	    }
+
+	    if (!revisedAny) {
+	        throw new IllegalStateException("No payslips eligible for revision (status must be REVISE or ON_HOLD).");
+	    }
+
+	    return payrollRun;
+	}
+  
+  
+  public List<Payslip> getPayslipsForRevision(int month, int year, int departmentId) {
+      PayrollRun payrollRun = payrollRunRepository
+          .getByMonthAndYearAndDepartmentId(month, year, departmentId)
+          .orElseThrow(() -> new ResourceNotFoundException("No payroll run found for the given period and department. Please run payroll first."));
+      return payslipRepository.getByPayrollRunIdAndStatusIn(
+          payrollRun.getId(),
+          List.of(PayslipStatus.REVISE, PayslipStatus.ON_HOLD)
+      );
+  }
+  
+}

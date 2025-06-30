@@ -1,0 +1,18 @@
+package com.payrollmanagement.easypay.repository;
+
+import com.payrollmanagement.easypay.model.LeaveRequest;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.time.LocalDate;
+import java.util.List;
+
+public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Integer> {
+    List<LeaveRequest> findByEmployeeId(int employeeId);
+
+    @Query("SELECT lr FROM LeaveRequest lr WHERE lr.employee.id = ?1 AND lr.status IN ('PENDING', 'APPROVED') AND lr.endDate >= ?2 AND lr.startDate <= ?3")
+    List<LeaveRequest> findActiveByEmployee(int employeeId, LocalDate start, LocalDate end);
+
+    @Query("SELECT COUNT(lr) FROM LeaveRequest lr WHERE lr.employee.id = ?1 AND lr.leaveType.id = ?2 AND lr.status = 'APPROVED' AND FUNCTION('YEAR', lr.startDate) = ?3")
+    int countApprovedLeavesForType(int employeeId, int leaveTypeId, int year);
+}

@@ -1,0 +1,20 @@
+package com.payrollmanagement.easypay.repository;
+
+import com.payrollmanagement.easypay.model.OvertimeRequest;
+import com.payrollmanagement.easypay.model.Employee;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.time.LocalDate;
+import java.util.List;
+
+public interface OvertimeRequestRepository extends JpaRepository<OvertimeRequest, Integer> {
+
+    List<OvertimeRequest> findByEmployeeId(int employeeId);
+
+    @Query("SELECT SUM(r.hours) FROM OvertimeRequest r WHERE r.employee.id = ?1 AND MONTH(r.date) = ?2 AND YEAR(r.date) = ?3 AND r.status = com.payrollmanagement.easypay.enums.RequestStatus.APPROVED")
+    Double getTotalApprovedHoursForEmployeeForMonth(int employeeId, int month, int year);
+
+    @Query("SELECT r FROM OvertimeRequest r WHERE r.employee.id = ?1 AND MONTH(r.date) = ?2 AND YEAR(r.date) = ?3 AND r.status = com.payrollmanagement.easypay.enums.RequestStatus.APPROVED")
+    List<OvertimeRequest> getApprovedRequestsForEmployeeForMonth(int employeeId, int month, int year);
+}

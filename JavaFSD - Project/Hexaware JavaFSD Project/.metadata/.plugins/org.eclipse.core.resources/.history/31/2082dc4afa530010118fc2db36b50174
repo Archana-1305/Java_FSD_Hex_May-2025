@@ -1,0 +1,37 @@
+package com.payrollmanagement.easypay.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.enums.RequestStatus;
+import com.payrollmanagement.easypay.model.ReimbursementRequest;
+
+@RestController
+@RequestMapping("/api/reimbursements")
+public class ReimbursementRequestController {
+	@Autowired
+	private final ReimbursementRequestService reimbursementService;
+	
+	@PostMapping("/submit")
+    public ResponseEntity<?> submitReimbursement(@RequestBody ReimbursementRequest request) {
+        ReimbursementRequest saved = reimbursementService.submitReimbursement(request);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/{requestId}")
+    public ResponseEntity<?> updateStatusAndAmount(
+            @PathVariable int requestId,
+            @RequestParam RequestStatus status,
+            @RequestParam(required = false) Double amount) {
+        ReimbursementRequest updated = reimbursementService.updateStatusAndAmount(requestId, status, amount);
+        return ResponseEntity.ok(updated);
+    }
+
+}

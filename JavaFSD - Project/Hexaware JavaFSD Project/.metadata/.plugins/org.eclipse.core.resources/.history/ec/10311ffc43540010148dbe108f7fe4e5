@@ -1,0 +1,212 @@
+package com.payrollmanagement.easypay.service;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.enums.PayslipStatus;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.AttendanceRecord;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.EmployeeMonthlyAllowances;
+import com.payrollmanagement.easypay.model.IncomeTaxSlab;
+import com.payrollmanagement.easypay.model.PayrollPolicy;
+import com.payrollmanagement.easypay.model.PayrollRun;
+import com.payrollmanagement.easypay.model.Payslip;
+import com.payrollmanagement.easypay.repository.AttendanceRecordRepository;
+import com.payrollmanagement.easypay.repository.EmployeeMonthlyAllowancesRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+import com.payrollmanagement.easypay.repository.IncomeTaxSlabRepository;
+import com.payrollmanagement.easypay.repository.PayslipRepository;
+
+@Service
+public class PayslipService {
+    @Autowired private PayslipRepository payslipRepository;
+    @Autowired private AttendanceRecordRepository attendanceRecordRepository;
+    @Autowired private EmployeeMonthlyAllowancesRepository employeeMonthlyAllowancesRepository;
+    @Autowired private IncomeTaxSlabRepository incomeTaxSlabRepository;
+    @Autowired private EmployeeRepository employeeRepository;
+
+    public Payslip generatePayslipForEmployee(Employee emp, int month, int year, PayrollRun run, PayrollPolicy policy) {
+        AttendanceRecord attendance = attendanceRecordRepository
+                .getByEmployeeIdAndMonthAndYear(emp.getId(), month, year);
+              //  .orElse(null);
+        int totalWorkingDays =  attendance.getTotalWorkingDays() ;
+        int totalPayableDays = attendance.getTotalPayableDays() ;
+        double ctc = emp.getCtcAmount();
+        EmployeeMonthlyAllowances allowances = employeeMonthlyAllowancesRepository
+                .getByEmployeeIdAndMonthAndYear(emp.getId(), month, year);
+                //.orElse(null);
+        double totalAllowances = allowances != null ? allowances.getTotalAmount() : 0;
+
+        double monthlyCtc = ctc / 12.0;
+        double proration = totalWorkingDays == 0 ? 1 : (double) totalPayableDays / totalWorkingDays;
+        double basic = monthlyCtc * (policy.getBasicPercent() / 100.0) * proration;
+
+        // --- Metro/non-metro HRA calculation
+        boolean isMetro = false;
+        if (emp.getWorkLocation() != null && emp.getWorkLocation().getLocationType() != null) {
+            isMetro = emp.getWorkLocation().getLocationType().equalsIgnoreCase("METRO");
+        }
+        double hraPercent = isMetro ? policy.getHraMetroPercent() : policy.getHraNonMetroPercent();
+        double hra = monthlyCtc * (hraPercent / 100.0) * proration;
+
+        double da = monthlyCtc * (policy.getDaPercent() / 100.0) * proration;
+        double special = policy.getSpecialAllowance() * proration;
+        double medical = policy.getMedicalAllowance() * proration;
+        double lta = policy.getLtaAllowance() * proration;
+        double foodCoupon = policy.getFoodCouponAmount() * proration;
+
+        double pf = policy.getIsPfEnabled() ? Math.min(basic * (policy.getEmployeePfRate() / 100.0), policy.getPfCeilingAmount()) : 0;
+        double esi = policy.getEsiEnabled() && monthlyCtc < policy.getEsiEligibilityCeiling()
+                ? monthlyCtc * (policy.getEmployeeEsiRate() / 100.0) : 0;
+
+        // Income Tax (basic)
+        double annualGross = monthlyCtc * 12;
+        IncomeTaxSlab slab = incomeTaxSlabRepository
+                .findMatchingSlab(year, annualGross)
+                .orElse(null);
+        double taxRate = slab != null ? slab.getTaxRatePercentage() : 0.0;
+        double incomeTax = (monthlyCtc * (taxRate / 100.0));
+
+        double lossOfPay = (totalWorkingDays - totalPayableDays) > 0
+                ? (monthlyCtc / totalWorkingDays) * (totalWorkingDays - totalPayableDays) : 0;
+
+        double gross = basic + hra + da + special + medical + lta + foodCoupon + totalAllowances;
+        double totalDeductions = pf + esi + incomeTax + lossOfPay;
+        double netPay = gross - totalDeductions;
+
+        Payslip payslip = new Payslip();
+        payslip.setEmployee(emp);
+        payslip.setPayrollRun(run);
+        payslip.setMonth(month);
+        payslip.setYear(year);
+        payslip.setBasicPay(basic);
+        payslip.setHouseRentAllowance(hra);
+        payslip.setDearnessAllowance(da);
+        payslip.setSpecialAllowance(special);
+        payslip.setMedicalAllowance(medical);
+        payslip.setLeaveTravelAllowance(lta);
+        payslip.setFoodCoupon(foodCoupon);
+        payslip.setTotalMonthlyAllowances(totalAllowances);
+
+        payslip.setProvidentFund(pf);
+        payslip.setEmployeeStateInsurance(esi);
+        payslip.setTaxDeductedAtSource(incomeTax);
+        payslip.setLossOfPayDeduction(lossOfPay);
+
+        payslip.setGrossSalary(gross);
+        payslip.setTotalDeductions(totalDeductions);
+        payslip.setNetPay(netPay);
+
+        payslip.setTotalWorkingDays(totalWorkingDays);
+        payslip.setTotalPayableDays(totalPayableDays);
+        payslip.setGeneratedOn(LocalDateTime.now());
+        payslip.setStatus(PayslipStatus.PENDING);
+
+        return payslipRepository.save(payslip);
+    }
+    
+    
+    
+
+    public Payslip updateStatus(int payslipId, PayslipStatus status) {
+        Optional<Payslip> optionalPayslip = payslipRepository.findById(payslipId);
+        if (optionalPayslip.isPresent()) {
+            Payslip payslip = optionalPayslip.get();
+            payslip.setStatus(status);
+            return payslipRepository.save(payslip);
+        }
+        throw new RuntimeException("Payslip not found");
+    }
+    
+    
+//    public Payslip generatePayslipForEmployee(int employeeId, int month, int year, int  payrollRunId, int policyId) {
+//    	
+//    	Employee emp = employeeRepository.findById(employeeId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + employeeId));
+//    	
+//        AttendanceRecord attendance = attendanceRecordRepository
+//                .getByEmployeeIdAndMonthAndYear(employeeId, month, year);
+//                
+//        int totalWorkingDays = attendance.getTotalWorkingDays() ;
+//        int totalPayableDays =  attendance.getTotalPayableDays() ;
+//        
+//        double ctc = emp.getCtcAmount();
+//        
+//        EmployeeMonthlyAllowances allowances = employeeMonthlyAllowancesRepository
+//                .findByEmployeeIdAndMonthAndYear(emp.getId(), month, year)
+//                .orElse(null);
+//        double totalAllowances = allowances != null ? allowances.getTotalAmount() : 0;
+//
+//        double monthlyCtc = ctc / 12.0;
+//        double proration = totalWorkingDays == 0 ? 1 : (double) totalPayableDays / totalWorkingDays;
+//        double basic = monthlyCtc * (policy.getBasicPercent() / 100.0) * proration;
+//
+//        // --- Metro/non-metro HRA calculation
+//        boolean isMetro = false;
+//        if (emp.getWorkLocation() != null && emp.getWorkLocation().getLocationType() != null) {
+//            isMetro = emp.getWorkLocation().getLocationType().equalsIgnoreCase("METRO");
+//        }
+//        double hraPercent = isMetro ? policy.getHraMetroPercent() : policy.getHraNonMetroPercent();
+//        double hra = monthlyCtc * (hraPercent / 100.0) * proration;
+//
+//        double da = monthlyCtc * (policy.getDaPercent() / 100.0) * proration;
+//        double special = policy.getSpecialAllowance() * proration;
+//        double medical = policy.getMedicalAllowance() * proration;
+//        double lta = policy.getLtaAllowance() * proration;
+//        double foodCoupon = policy.getFoodCouponAmount() * proration;
+//
+//        double pf = policy.getIsPfEnabled() ? Math.min(basic * (policy.getEmployeePfRate() / 100.0), policy.getPfCeilingAmount()) : 0;
+//        double esi = policy.getEsiEnabled() && monthlyCtc < policy.getEsiEligibilityCeiling()
+//                ? monthlyCtc * (policy.getEmployeeEsiRate() / 100.0) : 0;
+//
+//        // Income Tax (basic)
+//        double annualGross = monthlyCtc * 12;
+//        IncomeTaxSlab slab = incomeTaxSlabRepository
+//                .findMatchingSlab(year, annualGross)
+//                .orElse(null);
+//        double taxRate = slab != null ? slab.getTaxRatePercentage() : 0.0;
+//        double incomeTax = (monthlyCtc * (taxRate / 100.0));
+//
+//        double lossOfPay = (totalWorkingDays - totalPayableDays) > 0
+//                ? (monthlyCtc / totalWorkingDays) * (totalWorkingDays - totalPayableDays) : 0;
+//
+//        double gross = basic + hra + da + special + medical + lta + foodCoupon + totalAllowances;
+//        double totalDeductions = pf + esi + incomeTax + lossOfPay;
+//        double netPay = gross - totalDeductions;
+//
+//        Payslip payslip = new Payslip();
+//        payslip.setEmployee(emp);
+//        payslip.setPayrollRun(run);
+//        payslip.setMonth(month);
+//        payslip.setYear(year);
+//        payslip.setBasicPay(basic);
+//        payslip.setHouseRentAllowance(hra);
+//        payslip.setDearnessAllowance(da);
+//        payslip.setSpecialAllowance(special);
+//        payslip.setMedicalAllowance(medical);
+//        payslip.setLeaveTravelAllowance(lta);
+//        payslip.setFoodCoupon(foodCoupon);
+//        payslip.setTotalMonthlyAllowances(totalAllowances);
+//
+//        payslip.setProvidentFund(pf);
+//        payslip.setEmployeeStateInsurance(esi);
+//        payslip.setTaxDeductedAtSource(incomeTax);
+//        payslip.setLossOfPayDeduction(lossOfPay);
+//
+//        payslip.setGrossSalary(gross);
+//        payslip.setTotalDeductions(totalDeductions);
+//        payslip.setNetPay(netPay);
+//
+//        payslip.setTotalWorkingDays(totalWorkingDays);
+//        payslip.setTotalPayableDays(totalPayableDays);
+//        payslip.setGeneratedOn(LocalDateTime.now());
+//        payslip.setStatus(PayslipStatus.PENDING);
+//
+//        return payslipRepository.save(payslip);
+//    }
+//    
+}

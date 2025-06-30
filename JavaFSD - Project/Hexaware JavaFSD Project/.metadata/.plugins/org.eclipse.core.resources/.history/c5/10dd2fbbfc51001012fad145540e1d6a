@@ -1,0 +1,168 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.dto.EmployeeDto;
+import com.payrollmanagement.easypay.exception.InvalidOperationException;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.model.Department;
+import com.payrollmanagement.easypay.model.Designation;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.User;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+import com.payrollmanagement.easypay.repository.DepartmentRepository;
+import com.payrollmanagement.easypay.repository.DesignationRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+
+@Service
+public class EmployeeService {
+	private EmployeeRepository employeeRepository;
+	private DepartmentRepository departmentRepository;
+	private DesignationRepository designationRepository;
+	private CompanyRepository companyRepository;
+	private UserService userService;
+
+	
+	
+	 public EmployeeService(EmployeeRepository employeeRepository, DepartmentRepository departmentRepository,
+			DesignationRepository designationRepository, CompanyRepository companyRepository, UserService userService) {
+		this.employeeRepository = employeeRepository;
+		this.departmentRepository = departmentRepository;
+		this.designationRepository = designationRepository;
+		this.companyRepository = companyRepository;
+		this.userService = userService;
+	}
+
+
+
+	// Add Employee
+	public Employee addEmployee(Employee employee, int departmentId, int designationId, int companyId) {
+	    // Extract and configure user from employee
+	    User user = employee.getUser();
+	  //  user.setRole("EMPLOYEE");
+	    user = userService.signUp(user); // Save user first
+
+	    // Reattach saved user to employee
+	    employee.setUser(user);
+	    employee.setIsDelete(false);
+
+	    // Attach department
+	    Department department = departmentRepository.findById(departmentId)
+	        .orElseThrow(() -> new ResourceNotFoundException("Department Not Found"));
+	    employee.setDepartment(department);
+
+	    // Attach designation
+	    Designation designation = designationRepository.findById(designationId)
+	        .orElseThrow(() -> new ResourceNotFoundException("Designation Not Found"));
+	    employee.setDesignation(designation);
+
+	    // Attach company
+	    Company company = companyRepository.findById(companyId)
+	        .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+	    
+	    if (!department.getIsActive()) {
+            throw new InvalidOperationException("Cannot add designation to an inactive department.");
+        }
+	    if (!designation.isActive()) {
+            throw new InvalidOperationException("Cannot add designation to an inactive department.");
+        }
+	    employee.setCompany(company);
+
+	    
+	    // Save and return
+	    return employeeRepository.save(employee);
+	}
+	
+	// Get All
+    public List<Employee> getAllEmployees() {
+        return employeeRepository.findAll();
+    }
+    
+    // Get by Designation
+    public List<Employee> getEmployeesByDesignationId(int designationId) {
+        designationRepository.findById(designationId)
+            .orElseThrow(() -> new ResourceNotFoundException("Designation Not Found"));
+        return employeeRepository.getEmployeesByDesignationId(designationId);
+    }
+    
+    // Get by Department
+    public List<Employee> getEmployeesByDepartmentId(int departmentId) {
+        departmentRepository.findById(departmentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Department Not Found"));
+        return employeeRepository.findByDepartmentId(departmentId);
+    }
+    
+    // Get by Company
+    public List<EmployeeDto> getEmployeesByCompanyId(int companyId) {
+        companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+
+        List<Employee> list = employeeRepository.findByCompanyId(companyId);
+
+        return EmployeeDto.convertEmployeeListToDto(list);
+    }
+    // Update
+    public Employee updateEmployee(int id, Employee updatedEmployee) {
+        Employee emp = employeeRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Employee Id Invalid"));
+
+        if(updatedEmployee.getEmployeeCode() != null)
+            emp.setEmployeeCode(updatedEmployee.getEmployeeCode());
+        if(updatedEmployee.getFirst_name() != null)
+            emp.setFirst_name(updatedEmployee.getFirst_name());
+        if(updatedEmployee.getLast_name() != null)
+            emp.setLast_name(updatedEmployee.getLast_name());
+        if(updatedEmployee.getGender() != null)
+            emp.setGender(updatedEmployee.getGender());
+        if(updatedEmployee.getEmail() != null)
+            emp.setEmail(updatedEmployee.getEmail());
+        if(updatedEmployee.getContact() != null)
+            emp.setContact(updatedEmployee.getContact());
+        if(updatedEmployee.getAddress() != null)
+            emp.setAddress(updatedEmployee.getAddress());
+        if(updatedEmployee.getDob() != null)
+            emp.setDob(updatedEmployee.getDob());
+        if(updatedEmployee.getEmp_type() != null)
+            emp.setEmp_type(updatedEmployee.getEmp_type());
+        if(updatedEmployee.getDate_of_joining() != null)
+            emp.setDate_of_joining(updatedEmployee.getDate_of_joining());
+        if(updatedEmployee.getDate_of_leaving() != null)
+            emp.setDate_of_leaving(updatedEmployee.getDate_of_leaving());
+        if(updatedEmployee.getStatus() != null)
+            emp.setStatus(updatedEmployee.getStatus());
+        emp.setCtcAmount(updatedEmployee.getCtcAmount());
+        if(updatedEmployee.getBankName() != null)
+            emp.setBankName(updatedEmployee.getBankName());
+        if(updatedEmployee.getAccountNumber() != null)
+            emp.setAccountNumber(updatedEmployee.getAccountNumber());
+        if(updatedEmployee.getIfscCode() != null)
+            emp.setIfscCode(updatedEmployee.getIfscCode());
+        if(updatedEmployee.getUser() != null)
+            emp.setUser(updatedEmployee.getUser());
+        if(updatedEmployee.getDesignation() != null)
+            emp.setDesignation(updatedEmployee.getDesignation());
+        if(updatedEmployee.getDepartment() != null)
+            emp.setDepartment(updatedEmployee.getDepartment());
+        if(updatedEmployee.getWorkLocation() != null)
+            emp.setWorkLocation(updatedEmployee.getWorkLocation());
+        if(updatedEmployee.getCompany() != null)
+            emp.setCompany(updatedEmployee.getCompany());
+
+        return employeeRepository.save(emp);
+    }
+    
+    public void softDeleteEmployee(int id) {
+        Employee emp = employeeRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Employee Id Invalid"));
+        emp.setIsDelete(true);
+        employeeRepository.save(emp);
+    }
+    
+    public Employee getEmployeeInfo(String username) {
+        return employeeRepository.getEmployeeByUsername(username);
+    }
+
+}

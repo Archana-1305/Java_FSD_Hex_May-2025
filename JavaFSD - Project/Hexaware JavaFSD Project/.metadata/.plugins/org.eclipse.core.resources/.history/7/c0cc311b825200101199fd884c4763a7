@@ -1,0 +1,106 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.dto.BulkAttendanceRequest;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.AttendanceRecord;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.repository.AttendanceRecordRepository;
+import com.payrollmanagement.easypay.repository.CompanyLocationRepository;
+import com.payrollmanagement.easypay.repository.DepartmentRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+
+@Service
+public class AttendanceRecordService {
+
+    
+    private AttendanceRecordRepository attendanceRecordRepository;
+    private EmployeeRepository employeeRepository;
+    private DepartmentRepository departmentRepository;
+    private CompanyLocationRepository companyLocationRepository;
+
+   
+
+    public AttendanceRecordService(AttendanceRecordRepository attendanceRecordRepository,
+			EmployeeRepository employeeRepository) {
+		super();
+		this.attendanceRecordRepository = attendanceRecordRepository;
+		this.employeeRepository = employeeRepository;
+	}
+	public AttendanceRecord createAttendanceRecord(int employeeId, AttendanceRecord attendanceRecord) {
+        Employee employee = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + employeeId));
+
+        attendanceRecord.setEmployee(employee); 
+
+        return attendanceRecordRepository.save(attendanceRecord);
+    }
+    public AttendanceRecord getAttendanceRecordById(int id) {
+        return attendanceRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("AttendanceRecord not found"));
+    }
+
+    public List<AttendanceRecord> getAllAttendanceRecords() {
+        return attendanceRecordRepository.findAll();
+    }
+
+    public AttendanceRecord updateAttendanceRecord(int id, AttendanceRecord updatedRecord) {
+        AttendanceRecord existing = attendanceRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("AttendanceRecord not found"));
+        existing.setYear(updatedRecord.getYear());
+        existing.setMonth(updatedRecord.getMonth());
+        existing.setTotalWorkingDays(updatedRecord.getTotalWorkingDays());
+        existing.setTotalPayableDays(updatedRecord.getTotalPayableDays());
+        existing.setEmployee(updatedRecord.getEmployee());
+        return attendanceRecordRepository.save(existing);
+    }
+//	public void batchInsertAttendanceRecord(int departmentId, int locationId, int month, int year,
+//			int totalWorkingDays,List< AttendanceRecord> list ) {
+//		Department department = departmentRepository.findById(departmentId)
+//		        .orElseThrow(() -> new ResourceNotFoundException("Department Not Found"));
+//		CompanyLocation location =companyLocationRepository.findById(locationId)
+//				.orElseThrow(() -> new ResourceNotFoundException("Work Location Not Found"));
+//		 if (list.isEmpty())
+//	            throw new InvalidInputException("No Data Found");
+//		 list.parallelStream().forEach(ar -> ar.setMonth(month));
+//		 list.parallelStream().forEach(ar -> ar.setYear(year));
+//		 list.parallelStream().forEach(ar -> ar.setTotalWorkingDays(totalWorkingDays));
+//		 attendanceRecordRepository.saveAll(list);
+//		 
+//		    
+//		
+//	}
+    public void saveBulkAttendance(BulkAttendanceRequest request) {
+    	 // Loop over each employee's attendance DTO in the request
+        List<AttendanceRecord> toSave = new ArrayList<>();
+        for (BulkAttendanceRequest.EmployeeAttendanceDTO dto : request.getRecords()) {
+        	
+        	 // Fetch the Employee entity from the database using employeeId
+            Employee employee = employeeRepository.findById(dto.getEmployeeId())
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found: " + dto.getEmployeeId()));
+            // Create a new AttendanceRecord entity and set its fields
+            AttendanceRecord record = new AttendanceRecord();
+            record.setMonth(request.getMonth());
+            record.setYear(request.getYear());
+            record.setTotalWorkingDays(request.getTotalWorkingDays());
+            record.setTotalPayableDays(dto.getTotalPayableDays());
+            record.setEmployee(employee);
+            toSave.add(record);
+        }
+        attendanceRecordRepository.saveAll(toSave);
+    }
+    
+ // Get attendance records by department, month, and year
+    public List<AttendanceRecord> getAttendanceByDepartmentMonthYear(
+        Integer departmentId, Integer month, Integer year
+    ) {
+        return attendanceRecordRepository.getByEmployeeDepartmentIdAndMonthAndYear(
+            departmentId, month, year
+        );
+    }
+ 
+}

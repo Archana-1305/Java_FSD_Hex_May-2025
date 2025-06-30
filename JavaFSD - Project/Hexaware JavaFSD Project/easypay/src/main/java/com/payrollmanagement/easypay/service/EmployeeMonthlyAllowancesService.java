@@ -1,0 +1,58 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.model.EmployeeMonthlyAllowances;
+import com.payrollmanagement.easypay.model.Allowances;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.EmployeeAllowance;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.repository.EmployeeMonthlyAllowancesRepository;
+import com.payrollmanagement.easypay.repository.AllowancesRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+import com.payrollmanagement.easypay.repository.EmployeeAllowanceRepository;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+
+@Service
+public class EmployeeMonthlyAllowancesService {
+
+    private final EmployeeMonthlyAllowancesRepository employeeMonthlyAllowancesRepository;
+    private final AllowancesRepository allowancesRepo;
+    private final EmployeeRepository employeeRepo;
+    private final CompanyRepository companyRepo;
+    private EmployeeAllowanceRepository employeeAllowanceRepository;
+
+  
+	public EmployeeMonthlyAllowancesService(EmployeeMonthlyAllowancesRepository employeeMonthlyAllowancesRepository,
+			AllowancesRepository allowancesRepo, EmployeeRepository employeeRepo, CompanyRepository companyRepo,
+			EmployeeAllowanceRepository employeeAllowanceRepository) {
+		super();
+		this.employeeMonthlyAllowancesRepository = employeeMonthlyAllowancesRepository;
+		this.allowancesRepo = allowancesRepo;
+		this.employeeRepo = employeeRepo;
+		this.companyRepo = companyRepo;
+		this.employeeAllowanceRepository = employeeAllowanceRepository;
+	}
+
+	public EmployeeMonthlyAllowances calculateTotalAllowance(int employeeID, int month, int year) {
+	    List<Double> amounts = employeeAllowanceRepository.getAmountById(employeeID, month, year);
+	    double total = 0.0;
+	    for (Double amount : amounts) {
+	        if (amount != null) {
+	            total += amount;
+	        }
+	    }
+	    EmployeeMonthlyAllowances result = new EmployeeMonthlyAllowances();
+	    result.setEmployeeId(employeeID);
+	    result.setMonth(month);
+	    result.setYear(year);
+	    result.setTotalAmount(total);
+
+	    // Save to DB so your table is updated!
+	    return employeeMonthlyAllowancesRepository.save(result);
+	}
+}

@@ -1,0 +1,78 @@
+package com.payrollmanagement.easypay.controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.payrollmanagement.easypay.model.OvertimeRequest;
+import com.payrollmanagement.easypay.service.OvertimeRequestService;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/overtime-request")
+@CrossOrigin(origins = "http://localhost:5173")
+public class OvertimeRequestController {
+
+    @Autowired
+    private OvertimeRequestService overtimeRequestService;
+    private Logger logger = LoggerFactory.getLogger("OvertimeRequestController");
+
+    @PostMapping("/request")
+    public ResponseEntity<?> requestOvertime(@RequestBody OvertimeRequest request) {
+        logger.info("Overtime request received for employee ID: {}", 
+            request.getEmployee() != null ? request.getEmployee().getId() : null);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(overtimeRequestService.requestOvertime(request));
+    }
+
+    @PutMapping("/update-status/{requestId}")
+    public ResponseEntity<?> updateStatus(
+            @PathVariable int requestId,
+            @RequestBody OvertimeRequest request
+    ) {
+        logger.info("Updating overtime request ID {} with status {}", requestId, request.getStatus());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(overtimeRequestService.updateStatus(requestId, request));
+    }
+
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<?> getRequestsByEmployee(@PathVariable int employeeId) {
+        logger.info("Fetching OT requests for employee ID: {}", employeeId);
+        List<OvertimeRequest> requests = overtimeRequestService.getRequestsByEmployee(employeeId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(requests);
+    }
+
+    @GetMapping("/payroll-summary/{employeeId}/{month}/{year}")
+    public ResponseEntity<?> getPayrollSummary(
+            @PathVariable int employeeId,
+            @PathVariable int month,
+            @PathVariable int year
+    ) {
+        logger.info("Fetching OT payroll summary for employee ID: {}, month: {}, year: {}", employeeId, month, year);
+        double hours = overtimeRequestService.getTotalApprovedHoursForEmployeeForMonth(employeeId, month, year);
+        double amount = overtimeRequestService.getTotalApprovedAmountForEmployeeForMonth(employeeId, month, year);
+        OvertimePayrollSummary summary = new OvertimePayrollSummary(hours, amount);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(summary);
+    }
+
+    public static class OvertimePayrollSummary {
+        public double totalHours;
+        public double totalAmount;
+        public OvertimePayrollSummary(double h, double a) {
+            this.totalHours = h;
+            this.totalAmount = a;
+        }
+        public double getTotalHours() { return totalHours; }
+        public double getTotalAmount() { return totalAmount; }
+    }
+}

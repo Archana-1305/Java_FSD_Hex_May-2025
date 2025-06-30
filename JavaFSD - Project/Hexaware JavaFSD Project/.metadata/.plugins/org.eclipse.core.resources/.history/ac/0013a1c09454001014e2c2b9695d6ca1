@@ -1,0 +1,20 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.enums.PayrollRunStatus;
+import com.payrollmanagement.easypay.model.PayrollRun;
+
+public interface PayrollRunRepository extends JpaRepository<PayrollRun, Integer>{
+
+	@Query("SELECT p FROM PayrollRun p WHERE p.year = ?1 AND p.month = ?2 AND p.department.id = ?3 AND p.status != ?4")
+	Optional<PayrollRun> getActiveRun(int year, int month, int departmentId, PayrollRunStatus revised);
+
+	
+	@Query("SELECT p FROM PayrollRun p WHERE p.month = ?2 and p.year = ?1  AND p.department.id = ?3")
+	Optional<PayrollRun> getByMonthAndYearAndDepartmentId(int month, int year, int departmentId);
+
+}

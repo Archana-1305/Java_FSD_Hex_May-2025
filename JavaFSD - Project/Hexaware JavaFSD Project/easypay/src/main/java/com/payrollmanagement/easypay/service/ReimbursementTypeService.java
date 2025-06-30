@@ -1,0 +1,61 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.DuplicateResourceException;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.model.ReimbursementType;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+import com.payrollmanagement.easypay.repository.ReimbursementTypeRepository;
+
+@Service
+public class ReimbursementTypeService {
+	private ReimbursementTypeRepository reimbursementTypeRepository;
+	private CompanyRepository companyRepository;
+	public ReimbursementTypeService(ReimbursementTypeRepository reimbursementTypeRepository,
+			CompanyRepository companyRepository) {
+		super();
+		this.reimbursementTypeRepository = reimbursementTypeRepository;
+		this.companyRepository = companyRepository;
+	}
+	
+	public ReimbursementType addReimbursementType(ReimbursementType reimbursementType, int companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with ID: " + companyId));
+
+
+        reimbursementType.setCompany(company);
+        return reimbursementTypeRepository.save(reimbursementType);
+    }
+    public List<ReimbursementType> getAllReimbursementTypes() {
+        return reimbursementTypeRepository.findAll();
+    }
+
+    public ReimbursementType getReimbursementTypeById(int id) {
+        return reimbursementTypeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reimbursement Type Not Found"));
+    }
+
+    public List<ReimbursementType> getByCompanyId(int companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        return reimbursementTypeRepository.getByCompanyId(company);
+    }
+
+    public ReimbursementType updateReimbursementType(int id, ReimbursementType updatedReimbursementType) {
+        ReimbursementType existingType = getReimbursementTypeById(id);
+
+        if (updatedReimbursementType.getName() != null) {
+            existingType.setName(updatedReimbursementType.getName());
+        }
+        if (updatedReimbursementType.getMaxAmount() != null) {
+            existingType.setMaxAmount(updatedReimbursementType.getMaxAmount());
+        }
+        
+        return reimbursementTypeRepository.save(existingType);
+    }
+
+}

@@ -1,0 +1,45 @@
+package com.payrollmanagement.easypay.service;
+
+import com.payrollmanagement.easypay.model.AttendanceRecord;
+import com.payrollmanagement.easypay.repository.AttendanceRecordRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class AttendanceRecordService {
+
+    
+    private AttendanceRecordRepository attendanceRecordRepository;
+    
+
+    public AttendanceRecordService(AttendanceRecordRepository attendanceRecordRepository) {
+		super();
+		this.attendanceRecordRepository = attendanceRecordRepository;
+	}
+
+	public AttendanceRecord createAttendanceRecord(int employeeId, AttendanceRecord attendanceRecord) {
+        return attendanceRecordRepository.save(attendanceRecord);
+    }
+
+    public AttendanceRecord getAttendanceRecordById(int id) {
+        return attendanceRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("AttendanceRecord not found"));
+    }
+
+    public List<AttendanceRecord> getAllAttendanceRecords() {
+        return attendanceRecordRepository.findAll();
+    }
+
+    public AttendanceRecord updateAttendanceRecord(int id, AttendanceRecord updatedRecord) {
+        AttendanceRecord existing = attendanceRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("AttendanceRecord not found"));
+        existing.setYear(updatedRecord.getYear());
+        existing.setMonth(updatedRecord.getMonth());
+        existing.setTotalWorkingDays(updatedRecord.getTotalWorkingDays());
+        existing.setTotalPayableDays(updatedRecord.getTotalPayableDays());
+        existing.setEmployee(updatedRecord.getEmployee());
+        return attendanceRecordRepository.save(existing);
+    }
+}

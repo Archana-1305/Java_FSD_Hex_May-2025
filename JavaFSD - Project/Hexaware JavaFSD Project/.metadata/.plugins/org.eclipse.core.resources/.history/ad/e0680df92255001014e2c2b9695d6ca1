@@ -1,0 +1,91 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.dto.CompanyLocationDto;
+import com.payrollmanagement.easypay.exception.LocationNotFoundException;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.model.CompanyLocation;
+import com.payrollmanagement.easypay.repository.CompanyLocationRepository;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+
+@Service
+public class CompanyLocationService {
+
+	private CompanyLocationRepository companyLocationRepository;
+	private CompanyRepository companyRepository;
+
+	public CompanyLocationService(CompanyLocationRepository companyLocationRepository,
+			CompanyRepository companyRepository) {
+		this.companyLocationRepository = companyLocationRepository;
+		this.companyRepository = companyRepository;
+	}
+
+	// Add Company Location
+	public CompanyLocation addCompanyLocation(int companyId, CompanyLocation companyLocation) {
+		Company company = companyRepository.findById(companyId)
+				.orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+		companyLocation.setCompany(company);
+		companyLocation.setIsActive(true);
+		return companyLocationRepository.save(companyLocation);
+	}
+
+	// Get Company Location by Id
+	public CompanyLocationDto getCompanyLocationById(int id) {
+	    CompanyLocation location = companyLocationRepository.findById(id)
+	            .orElseThrow(() -> new ResourceNotFoundException("CompanyLocation Not Found"));
+	    return CompanyLocationDto.fromEntity(location);
+	}
+
+	// Get Locations by Company Id
+	public List<CompanyLocation> getLocationsByCompanyId(int companyId) {
+		companyRepository.findById(companyId)
+		.orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+		List<CompanyLocation> list = companyLocationRepository.getLocationsByCompanyId(companyId);
+		if (list != null && list.isEmpty())
+			throw new LocationNotFoundException("This Company has no Locations");
+		return list;
+	}
+
+	// Update Company Location
+		public CompanyLocation updateCompanyLocation(int id, CompanyLocation updatedLocation) {
+			CompanyLocation loc = companyLocationRepository.findById(id)
+					.orElseThrow(() -> new ResourceNotFoundException("CompanyLocation Id Invalid"));
+
+			if (updatedLocation.getAddress() != null)
+				loc.setAddress(updatedLocation.getAddress());
+			if (updatedLocation.getCity() != null)
+				loc.setCity(updatedLocation.getCity());
+			if (updatedLocation.getState() != null)
+				loc.setState(updatedLocation.getState());
+			if (updatedLocation.getPfCode() != null)
+				loc.setPfCode(updatedLocation.getPfCode());
+			if (updatedLocation.getEsiCode() != null)
+				loc.setEsiCode(updatedLocation.getEsiCode());
+			if (updatedLocation.getPtCode() != null)
+				loc.setPtCode(updatedLocation.getPtCode());
+			if (updatedLocation.getCompany() != null)
+				loc.setCompany(updatedLocation.getCompany());
+			if (updatedLocation.getIsActive() !=null)
+			loc.setIsActive(updatedLocation.getIsActive());
+
+			return companyLocationRepository.save(loc);
+		}
+
+		public void simulateDeleteById(int id) {
+			CompanyLocation location = companyLocationRepository.findById(id)
+					.orElseThrow(() -> new LocationNotFoundException("Company location not found with ID: " + id));
+
+			// Simulate delete: mark inactive
+			location.setIsDelete(true);
+			companyLocationRepository.save(location);
+		}
+
+		public List<CompanyLocation> getAllLocations() {
+			// TODO Auto-generated method stub
+			return companyLocationRepository.findAll();
+		}
+}

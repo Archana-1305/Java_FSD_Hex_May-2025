@@ -1,0 +1,38 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.enums.EmpStatus;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.User;
+
+public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
+
+	Employee findByUser(User user);
+
+	@Query("select e from Employee e where e.designation.id = ?1 and e.isDelete = false")
+	List<Employee> getEmployeesByDesignationId(int designationId);
+
+	@Query("select e from Employee e where e.department.id = ?1 and e.isDelete = false")
+	List<Employee> findByDepartmentId(int departmentId);
+
+	@Query("select e from Employee e where e.company.id = ?1 and e.isDelete = false")
+	List<Employee> findByCompanyId(int companyId);
+
+	@Query("select e from Employee e where e.isDelete = false")
+	List<Employee> findAllActive();
+	
+	@Query("select e from Employee e where e.user.username = ?1 and e.isDelete = false")
+	Employee getEmployeeByUsername(String username);
+
+	List<Employee> findByStatus(EmpStatus active);
+
+	@Query("SELECT e FROM Employee e WHERE e.status = ?1 AND e.department.id = ?2")
+	List<Employee> getByStatusAndDepartmentId(EmpStatus active, int departmentId);
+	
+
+   
+}

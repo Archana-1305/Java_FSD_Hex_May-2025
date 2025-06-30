@@ -1,0 +1,80 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.payrollmanagement.easypay.model.EmployeeMonthlyAllowances;
+import com.payrollmanagement.easypay.model.Allowances;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.repository.EmployeeMonthlyAllowancesRepository;
+import com.payrollmanagement.easypay.repository.AllowancesRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+
+@Service
+public class EmployeeMonthlyAllowancesService {
+
+    private final EmployeeMonthlyAllowancesRepository monthlyAllowancesRepo;
+    private final AllowancesRepository allowancesRepo;
+    private final EmployeeRepository employeeRepo;
+    private final CompanyRepository companyRepo;
+
+    public EmployeeMonthlyAllowancesService(EmployeeMonthlyAllowancesRepository monthlyAllowancesRepo,
+                                            AllowancesRepository allowancesRepo,
+                                            EmployeeRepository employeeRepo,
+                                            CompanyRepository companyRepo) {
+        this.monthlyAllowancesRepo = monthlyAllowancesRepo;
+        this.allowancesRepo = allowancesRepo;
+        this.employeeRepo = employeeRepo;
+        this.companyRepo = companyRepo;
+    }
+
+    // Add allowance for ALL employees of a company (e.g., festival bonus)
+    @Transactional
+    public void addAllowanceToAllEmployees(int companyId, int allowanceId, double amount) {
+        Company company = companyRepo.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        Allowances allowance = allowancesRepo.findById(allowanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Allowance Not Found"));
+        List<Employee> employees = employeeRepo.findByCompanyId(companyId);
+        for (Employee emp : employees) {
+            EmployeeMonthlyAllowances ema = new EmployeeMonthlyAllowances();
+            ema.setEmployee(emp);
+            ema.setAllowances(allowance);
+            ema.setAmount(amount);
+            monthlyAllowancesRepo.save(ema);
+        }
+    }
+
+    // Add allowance for a specific employee (e.g., performance bonus)
+    public EmployeeMonthlyAllowances addAllowanceToEmployee(int employeeId, int allowanceId, double amount) {
+        Employee employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee Not Found"));
+        Allowances allowance = allowancesRepo.findById(allowanceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Allowance Not Found"));
+        EmployeeMonthlyAllowances ema = new EmployeeMonthlyAllowances();
+        ema.setEmployee(employee);
+        ema.setAllowances(allowance);
+        ema.setAmount(amount);
+        return monthlyAllowancesRepo.save(ema);
+    }
+
+    // Get all allowances for an employee (for payroll calculation)
+    public List<EmployeeMonthlyAllowances> getAllowancesForEmployee(int employeeId) {
+        return monthlyAllowancesRepo.findByEmployeeId(employeeId);
+    }
+
+    // Get all allowances for a company
+    public List<EmployeeMonthlyAllowances> getAllowancesForCompany(int companyId) {
+        List<Employee> employees = employeeRepo.findByCompanyId(companyId);
+        List<EmployeeMonthlyAllowances> all = new java.util.ArrayList<>();
+        for (Employee emp : employees) {
+            all.addAll(monthlyAllowancesRepo.findByEmployeeId(emp.getId()));
+        }
+        return all;
+    }
+}

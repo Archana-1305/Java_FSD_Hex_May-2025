@@ -1,0 +1,97 @@
+package com.payrollmanagement.easypay.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.enums.States;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.service.CompanyService;
+
+@RestController
+@RequestMapping("/api/company")
+@CrossOrigin(origins = "http://localhost:5173")
+public class CompanyController {
+
+	@Autowired
+	private CompanyService companyService;
+	
+	private Logger logger = LoggerFactory.getLogger("CompanyController");
+	
+	/* AIM      : To add a new Company and save details
+	 * PATH     : /api/company/add
+	 * METHOD   : POST
+	 * PARAM    : @RequestBody Company company 
+	 * RESPONSE : Company with saved details
+	 * */
+	@PostMapping("/add")
+	public ResponseEntity<?> addCompany(@RequestBody Company company) {
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyService.addCompany(company));
+	}
+	
+	/* AIM      : To get Company details by ID
+	 * PATH     : /api/company/getById/{id}
+	 * METHOD   : GET
+	 * PARAM    : @PathVariable int id
+	 * RESPONSE : Company with given ID
+	 * */
+	@GetMapping("getById/{id}")
+	public ResponseEntity<?> getCompanyById(@PathVariable int id) {
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyService.getCompanyById(id));
+	}
+	
+	/* AIM      : To update existing Company details by ID
+	 * PATH     : /api/company/update/{id}
+	 * METHOD   : PUT
+	 * PARAM    : @PathVariable int id, @RequestBody Company updatedCompany
+	 * RESPONSE : Updated Company details
+	 * */
+	@PutMapping("update/{id}")
+    public ResponseEntity<Company> updateCompany(@PathVariable int id, @RequestBody Company updatedCompany) {
+		logger.info("ID given is : " + id);
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyService.updateCompany(id, updatedCompany));    
+    }
+	
+	/* AIM      : To fetch all Companies with details
+	 * PATH     : /api/company/getAll
+	 * METHOD   : GET
+	 * PARAM    : None
+	 * RESPONSE : List of all Companies
+	 * */
+	@GetMapping("getAll")
+	public ResponseEntity<?> getAll() {
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyService.getAll());
+	}
+	
+	@GetMapping("/getAllStates")
+	public ResponseEntity<?> getAllStates() {
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyService.getAllStates());
+				
+	    
+	}
+	
+
+}

@@ -1,0 +1,49 @@
+package com.payrollmanagement.easypay.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+import com.payrollmanagement.easypay.service.EmployeeMonthlyAllowancesService;
+import com.payrollmanagement.easypay.model.EmployeeMonthlyAllowances;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/employee-monthly-allowance")
+@CrossOrigin(origins = "http://localhost:5173")
+public class EmployeeMonthlyAllowancesController {
+
+    @Autowired
+    private EmployeeMonthlyAllowancesService service;
+
+    // Add allowance to all employees (e.g., festival bonus)
+    @PostMapping("/addToAll")
+    public ResponseEntity<String> addAllowanceToAllEmployees(
+            @RequestParam int companyId,
+            @RequestParam int allowanceId,
+            @RequestParam double amount
+    ) {
+        service.addAllowanceToAllEmployees(companyId, allowanceId, amount);
+        return ResponseEntity.ok("Allowance added to all employees");
+    }
+
+    // Add allowance to a specific employee (e.g., performance bonus)
+    @PostMapping("/addToEmployee")
+    public ResponseEntity<EmployeeMonthlyAllowances> addAllowanceToEmployee(
+            @RequestParam int employeeId,
+            @RequestParam int allowanceId,
+            @RequestParam double amount
+    ) {
+        EmployeeMonthlyAllowances result = service.addAllowanceToEmployee(employeeId, allowanceId, amount);
+        return ResponseEntity.ok(result);
+    }
+
+    // Get all allowances for an employee (for payroll calculation)
+    @GetMapping("/getByEmployee/{employeeId}")
+    public ResponseEntity<List<EmployeeMonthlyAllowances>> getAllowancesForEmployee(
+            @PathVariable int employeeId
+    ) {
+        return ResponseEntity.ok(service.getAllowancesForEmployee(employeeId));
+    }
+}

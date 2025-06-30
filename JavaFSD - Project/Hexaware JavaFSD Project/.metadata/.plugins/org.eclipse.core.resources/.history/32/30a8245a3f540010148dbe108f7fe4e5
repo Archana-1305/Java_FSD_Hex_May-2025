@@ -1,0 +1,30 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.model.AttendanceRecord;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.Payslip;
+
+public interface AttendanceRecordRepository extends JpaRepository<AttendanceRecord, Integer>{
+
+	@Query("Select ar from AttendanceRecord ar where ar.employee.id=?1")
+	List<AttendanceRecord> getByEmployeeId(Employee employee);
+
+	//Optional<AttendanceRecord> findByEmployeeIdAndMonthAndYear(int id, int month, int year);
+	
+
+	@Query("Select ar from AttendanceRecord ar where ar.employee.department.id=?1 and ar.month=?2 and ar.year=?3")
+	List<AttendanceRecord> getByEmployeeDepartmentIdAndMonthAndYear(Integer departmentId, Integer month, Integer year);
+
+	boolean existsByEmployeeIdAndYearAndMonth(int id, int year, int month);
+
+	@Query("Select ar from AttendanceRecord ar where ar.employee.id=?1 and ar.month=?2 and ar.year=?3")
+	List<Payslip> getByEmployeeIdAndMonthAndYear(int employeeId, int month, int year);
+
+	
+}

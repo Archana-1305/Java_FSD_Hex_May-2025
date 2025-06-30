@@ -1,0 +1,135 @@
+package com.payrollmanagement.easypay.controller;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.enums.City;
+import com.payrollmanagement.easypay.enums.States;
+import com.payrollmanagement.easypay.model.CompanyLocation;
+import com.payrollmanagement.easypay.service.CompanyLocationService;
+
+@RestController
+@RequestMapping("/api/location")
+@CrossOrigin(origins = "http://localhost:5173")
+public class CompanyLocationController {
+	
+	@Autowired
+	private CompanyLocationService companyLocationService;
+	
+	private Logger logger = LoggerFactory.getLogger("CompanyLocationController");
+	
+	/* AIM      : To add a new Company Location under a specific Company
+	 * PATH     : /api/company-location/add/{companyId}
+	 * METHOD   : POST
+	 * PARAM    : @PathVariable int companyId, @RequestBody CompanyLocation companyLocation
+	 * RESPONSE : CompanyLocation with saved details
+	 * */
+	@PostMapping("/add/{companyId}")
+	public ResponseEntity<?> addCompanyLocation(@PathVariable int companyId,
+			@RequestBody CompanyLocation companyLocation) {
+		logger.info("ID given is : " + companyId);
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyLocationService.addCompanyLocation(companyId,companyLocation));
+	}
+	
+	/* AIM      : To get Company Location details by Location ID
+	 * PATH     : /api/company-location/getById/{id}
+	 * METHOD   : GET
+	 * PARAM    : @PathVariable int id
+	 * RESPONSE : CompanyLocation with given ID
+	 * */
+	@GetMapping("/getById/{id}")
+	public ResponseEntity<?> getCompanyLocationById(@PathVariable int id) {
+		logger.info("ID given is : " + id);
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyLocationService.getCompanyLocationById(id));
+	}
+	
+	/* AIM      : To get all Locations for a specific Company by Company ID
+	 * PATH     : /api/company-location/getByCmpId/{companyId}
+	 * METHOD   : GET
+	 * PARAM    : @PathVariable int companyId
+	 * RESPONSE : List of CompanyLocation for the Company
+	 * */
+	@GetMapping("/getByCmpId/{companyId}")
+	public ResponseEntity<?> getLocationsByCompanyId(@PathVariable int companyId) {
+		logger.info("ID given is : " + companyId);
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyLocationService.getLocationsByCompanyId(companyId));
+	}
+	
+	/* AIM      : To update an existing Company Location by Location ID
+	 * PATH     : /api/company-location/update/{id}
+	 * METHOD   : PUT
+	 * PARAM    : @PathVariable int id, @RequestBody CompanyLocation updatedLocation
+	 * RESPONSE : Updated CompanyLocation details
+	 * */
+	@PutMapping("/update/{id}")
+	public ResponseEntity<CompanyLocation> updateCompanyLocation(@PathVariable int id,
+			@RequestBody CompanyLocation updatedLocation) {
+		logger.info("ID given is : " + id);
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyLocationService.updateCompanyLocation(id, updatedLocation));
+	}
+	
+	@GetMapping("/getAllStates")
+	public List<String> getAllStates() {
+	    List<String> states = new ArrayList<>();
+	    for (States s : States.values()) {
+	        states.add(s.name());
+	    }
+	    return states;
+	}
+
+	@GetMapping("/getAllCities")
+	public List<String> getAllCities(@RequestParam String state) {
+	    List<String> cities = new ArrayList<>();
+	    try {
+	        States st = States.valueOf(state);
+	        for (City c : City.values()) {
+	            if (c.getState() == st) {
+	                cities.add(c.name());
+	            }
+	        }
+	    } catch (Exception e) {
+	        // return empty list if invalid state
+	    }
+	    return cities;
+	}
+	
+	@DeleteMapping("/delete/{id}")
+	public ResponseEntity<String> simulateDeleteLocation(@PathVariable int id) {
+	    logger.info("Simulated delete for location ID: {}", id);
+	    companyLocationService.simulateDeleteById(id);
+	    return ResponseEntity.ok("Company location deletion simulated (marked inactive)");
+	}
+	@GetMapping("/getAll")
+	public ResponseEntity<?> getAllLocations() {
+		
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(companyLocationService.getAllLocations());
+	}
+	
+
+}

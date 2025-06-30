@@ -1,0 +1,108 @@
+package com.payrollmanagement.easypay.service;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.DesignationNotFoundException;
+import com.payrollmanagement.easypay.exception.InvalidOperationException;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Department;
+import com.payrollmanagement.easypay.model.Designation;
+import com.payrollmanagement.easypay.repository.DepartmentRepository;
+import com.payrollmanagement.easypay.repository.DesignationRepository;
+
+@Service
+public class DesignationService {
+	private final DesignationRepository designationRepository;
+	private final DepartmentRepository departmentRepository;
+
+	public DesignationService(DesignationRepository designationRepository, DepartmentRepository departmentRepository) {
+		this.designationRepository = designationRepository;
+		this.departmentRepository = departmentRepository;
+	}
+	
+	// Add Designation
+    public Designation addDesignation(int departmentId, Designation designation) {
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Department Not Found"));
+        
+        if (!department.getIsActive()) {
+            throw new InvalidOperationException("Cannot add designation to an inactive department.");
+        }
+        
+        designation.setDepartment(department);
+        designation.setCreatedOn(LocalDate.now());
+        designation.setActive(true);
+        return designationRepository.save(designation);
+    }
+    
+    // Get All
+    public List<Designation> getAllDesignations() {
+        return designationRepository.findAll();
+    }
+
+    // Get by ID
+    public Designation getDesignationById(int id) {
+        return designationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Designation Not Found"));
+    }
+
+    // Get by Department
+    public List<Designation> getDesignationsByDepartmentId(int departmentId) {
+        departmentRepository.findById(departmentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Department Not Found"));
+        List<Designation> list =designationRepository.findByDepartmentId(departmentId);
+        if (list != null && list.isEmpty())
+        	throw new DesignationNotFoundException("Designation not Found");
+        return list;      
+    }
+
+    // Update
+    public Designation updateDesignation(int id, Designation updatedDesignation) {
+        Designation desig = designationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Designation Id Invalid"));
+
+        if (updatedDesignation.getDesignationName() != null)
+            desig.setDesignationName(updatedDesignation.getDesignationName());
+
+        if (updatedDesignation.getDesignationCode() != null)
+            desig.setDesignationCode(updatedDesignation.getDesignationCode());
+
+        if (updatedDesignation.getDescription() != null)
+            desig.setDescription(updatedDesignation.getDescription());
+
+        if (updatedDesignation.getIsFullTimeAllowed() != null)
+            desig.setFullTimeAllowed(updatedDesignation.getIsFullTimeAllowed());
+
+        if (updatedDesignation.getMinFullTimeCtc() != null)
+            desig.setMinFullTimeCtc(updatedDesignation.getMinFullTimeCtc());
+
+        if (updatedDesignation.getMaxFullTimeCtc() != null)
+            desig.setMaxFullTimeCtc(updatedDesignation.getMaxFullTimeCtc());
+
+        if (updatedDesignation.isPartTimeAllowed() != null)
+            desig.setisPartTimeAllowed(updatedDesignation.isPartTimeAllowed());
+
+        if (updatedDesignation.getMinPartTimeCtc() != null)
+            desig.setMinPartTimeCtc(updatedDesignation.getMinPartTimeCtc());
+
+        if (updatedDesignation.getMaxPartTimeCtc() != null)
+            desig.setMaxPartTimeCtc(updatedDesignation.getMaxPartTimeCtc());
+
+        if (updatedDesignation.isActive() != null)
+            desig.setActive(updatedDesignation.isActive());
+
+        return designationRepository.save(desig);
+    }
+    
+ // Soft delete
+    public void softDeleteDesignation(int id) {
+        Designation designation = designationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Designation Not Found"));
+        designation.setIsDelete(true);
+        designationRepository.save(designation);
+    }
+
+}

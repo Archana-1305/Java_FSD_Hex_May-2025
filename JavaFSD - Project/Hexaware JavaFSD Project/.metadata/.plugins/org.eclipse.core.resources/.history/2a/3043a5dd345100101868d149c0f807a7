@@ -1,0 +1,73 @@
+package com.payrollmanagement.easypay.dto;
+
+import com.payrollmanagement.easypay.model.Employee;
+
+public class EmployeeDto {
+    private int id;
+    private String employeeCode;
+    private String firstName;
+    private String lastName;
+    private String gender;
+    private String email;
+    private String contact;
+    private String address;
+    private String dob;
+    private String empType;
+    private String dateOfJoining;
+    private String dateOfLeaving;
+    private String status;
+    private double ctcAmount;
+    private String bankName;
+    private String accountNumber;
+    private String ifscCode;
+
+    private int departmentId;
+    private String departmentName;
+    private int designationId;
+    private String designationName;
+    private int companyId;
+    private String companyName;
+    private Integer workLocationId;
+    private String workLocationAddress;
+
+    // Getters and Setters...
+
+    public static EmployeeDto fromEntity(Employee emp) {
+        EmployeeDto dto = new EmployeeDto();
+        dto.id = emp.getId();
+        dto.employeeCode = emp.getEmployeeCode();
+        dto.firstName = emp.getFirst_name();
+        dto.lastName = emp.getLast_name();
+        dto.gender = emp.getGender() != null ? emp.getGender().name() : null;
+        dto.email = emp.getEmail();
+        dto.contact = emp.getContact();
+        dto.address = emp.getAddress();
+        dto.dob = emp.getDob();
+        dto.empType = emp.getEmp_type() != null ? emp.getEmp_type().name() : null;
+        dto.dateOfJoining = emp.getDate_of_joining();
+        dto.dateOfLeaving = emp.getDate_of_leaving();
+        dto.status = emp.getStatus() != null ? emp.getStatus().name() : null;
+        dto.ctcAmount = emp.getCtcAmount();
+        dto.bankName = emp.getBankName();
+        dto.accountNumber = emp.getAccountNumber();
+        dto.ifscCode = emp.getIfscCode();
+
+        if (emp.getDepartment() != null) {
+            dto.departmentId = emp.getDepartment().getId();
+            dto.departmentName = emp.getDepartment().getDepartmentName();
+        }
+        if (emp.getDesignation() != null) {
+            dto.designationId = emp.getDesignation().getId();
+            dto.designationName = emp.getDesignation().getDesignationName();
+        }
+        if (emp.getCompany() != null) {
+            dto.companyId = emp.getCompany().getId();
+            dto.companyName = emp.getCompany().getName();
+        }
+        if (emp.getWorkLocation() != null) {
+            dto.workLocationId = emp.getWorkLocation().getId();
+            dto.workLocationAddress = emp.getWorkLocation().getAddress();
+        }
+        return dto;
+    }
+}

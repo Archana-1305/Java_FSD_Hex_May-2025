@@ -1,0 +1,5 @@
+package com.payrollmanagement.easypay.repository;
+
+public interface ReimbursementRequestRepository {
+
+}

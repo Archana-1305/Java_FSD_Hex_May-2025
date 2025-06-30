@@ -1,0 +1,25 @@
+package com.payrollmanagement.easypay.dto;
+
+import java.util.List;
+
+public class MonthlyTotalNetPayDto {
+	 private List<Integer> years;
+	    private List<Integer> months;
+	    private List<Double> totalNetPays;
+
+	    public MonthlyTotalNetPayDto() {}
+
+	    public MonthlyTotalNetPayDto(List<Integer> years, List<Integer> months, List<Double> totalNetPays) {
+	        this.years = years;
+	        this.months = months;
+	        this.totalNetPays = totalNetPays;
+	    }
+
+	    // getters and setters
+	    public List<Integer> getYears() { return years; }
+	    public void setYears(List<Integer> years) { this.years = years; }
+	    public List<Integer> getMonths() { return months; }
+	    public void setMonths(List<Integer> months) { this.months = months; }
+	    public List<Double> getTotalNetPays() { return totalNetPays; }
+	    public void setTotalNetPays(List<Double> totalNetPays) { this.totalNetPays = totalNetPays; }
+}

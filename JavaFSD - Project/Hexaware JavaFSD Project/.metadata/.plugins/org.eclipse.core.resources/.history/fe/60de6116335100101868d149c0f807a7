@@ -1,0 +1,24 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.User;
+
+public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
+
+	Employee findByUser(User user);
+	@Query("select e from Employee e where e.designation.id = ?1")
+    List<Employee> getEmployeesByDesignationId(int designationId);
+	
+	 @Query("select e from Employee e where e.department.id = ?1")
+	 List<Employee> findByDepartmentId(int departmentId);
+	 
+	 @Query("select e from Employee e where e.company.id = ?1")
+	 List<Employee> findByCompanyId(int companyId);
+
+
+}

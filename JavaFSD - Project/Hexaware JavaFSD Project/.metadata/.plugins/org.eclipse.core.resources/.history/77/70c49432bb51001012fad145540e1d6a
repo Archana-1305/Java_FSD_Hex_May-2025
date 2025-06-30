@@ -1,0 +1,36 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.EmployeeAllowanceItem;
+import com.payrollmanagement.easypay.repository.EmployeeAllowanceItemRepository;
+
+@Service
+public class EmployeeAllowanceItemService {
+
+    private final EmployeeAllowanceItemRepository employeeAllowanceItemRepository;
+
+    public EmployeeAllowanceItemService(EmployeeAllowanceItemRepository employeeAllowanceItemRepository) {
+        this.employeeAllowanceItemRepository = employeeAllowanceItemRepository;
+    }
+
+    // Add a single EmployeeAllowanceItem
+    public EmployeeAllowanceItem addItem(EmployeeAllowanceItem item) {
+        return employeeAllowanceItemRepository.save(item);
+    }
+
+    // Get all items for a given EmployeeAllowance ID
+    public List<EmployeeAllowanceItem> getItemsByEmployeeAllowanceId(int employeeAllowanceId) {
+        return employeeAllowanceItemRepository.findByEmployeeAllowanceId(employeeAllowanceId);
+    }
+
+    // Get item by ID
+    public EmployeeAllowanceItem getById(int id) {
+        return employeeAllowanceItemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee Allowance Item Not Found"));
+    }
+
+}

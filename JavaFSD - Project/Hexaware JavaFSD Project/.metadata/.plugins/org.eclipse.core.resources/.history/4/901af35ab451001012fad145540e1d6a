@@ -1,0 +1,59 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.EmployeeAllowance;
+import com.payrollmanagement.easypay.model.EmployeeAllowanceItem;
+import com.payrollmanagement.easypay.repository.EmployeeAllowanceRepository;
+
+@Service
+public class EmployeeAllowanceService {
+
+	private final EmployeeAllowanceRepository employeeAllowanceRepository;
+	private final EmployeeAllowanceItemRepository employeeAllowanceItemRepository;
+
+	public EmployeeAllowanceService(EmployeeAllowanceRepository employeeAllowanceRepository,
+			EmployeeAllowanceItemRepository employeeAllowanceItemRepository) {
+		this.employeeAllowanceRepository = employeeAllowanceRepository;
+		this.employeeAllowanceItemRepository = employeeAllowanceItemRepository;
+	}
+
+	// Assign allowances to an employee for a month
+	public EmployeeAllowance assignAllowances(int empId, int month, int year, List<EmployeeAllowanceItem> items) {
+
+		// Get or create EmployeeAllowance record
+		EmployeeAllowance ea = employeeAllowanceRepository.findByEmployeeIdAndMonthAndYear(empId, month, year)
+				.orElseGet(() -> {
+					EmployeeAllowance newEA = new EmployeeAllowance();
+					newEA.setEmployeeId(empId);
+					newEA.setMonth(month);
+					newEA.setYear(year);
+					newEA.setTotalAllowance(0.0);
+					return employeeAllowanceRepository.save(newEA);
+				});
+
+		// Link items to this parent
+		for (EmployeeAllowanceItem item : items) {
+			item.setEmployeeAllowance(ea);
+		}
+
+		// Save all items
+		employeeAllowanceItemRepository.saveAll(items);
+
+		// Recalculate total
+		double total = employeeAllowanceItemRepository.findByEmployeeAllowanceId(ea.getId()).stream()
+				.mapToDouble(EmployeeAllowanceItem::getAmount).sum();
+
+		ea.setTotalAllowance(total);
+		return employeeAllowanceRepository.save(ea);
+	}
+
+	// Get allowance summary for a specific employee by month/year
+	public EmployeeAllowance getByEmpMonthYear(int empId, int month, int year) {
+        return employeeAllowanceRepository
+                .findByEmployeeIdAndMonthAndYear(empId, month, year)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee allowance not found"));
+    }

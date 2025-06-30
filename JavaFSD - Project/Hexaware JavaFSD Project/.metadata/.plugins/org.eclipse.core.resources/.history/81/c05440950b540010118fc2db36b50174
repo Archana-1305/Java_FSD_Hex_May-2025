@@ -1,0 +1,56 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.enums.RequestStatus;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.MonthReimbursement;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+import com.payrollmanagement.easypay.repository.MonthReimbursementRepository;
+import com.payrollmanagement.easypay.repository.ReimbursementRequestRepository;
+
+@Service
+
+public class MonthReimbursementService {
+	 private  MonthReimbursementRepository monthReimbursementRepository;
+	    private  EmployeeRepository employeeRepository;
+	    private  ReimbursementRequestRepository reimbursementRequestRepository;
+	    
+		public MonthReimbursementService(MonthReimbursementRepository monthReimbursementRepository,
+				EmployeeRepository employeeRepository, ReimbursementRequestRepository reimbursementRequestRepository) {
+			super();
+			this.monthReimbursementRepository = monthReimbursementRepository;
+			this.employeeRepository = employeeRepository;
+			this.reimbursementRequestRepository = reimbursementRequestRepository;
+		}
+		
+		public MonthReimbursement calculateAndSaveTotalReimbursement(int employeeId, int month, int year) {
+	        Employee employee = employeeRepository.findById(employeeId)
+	                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+	        List<Double> amounts = reimbursementRequestRepository.getApprovedAmountsByEmployeeMonthYear(
+	                employeeId, month, year, RequestStatus.APPROVED);
+
+	        double total = 0.0;
+	        for (Double amount : amounts) {
+	            if (amount != null) {
+	                total += amount;
+	            }
+	        }
+
+	        MonthReimbursement monthReimbursement = monthReimbursementRepository
+	                .findByEmployeeAndMonthAndYear(employee, month, year)
+	                .orElse(new MonthReimbursement());
+
+	        monthReimbursement.setEmployee(employee);
+	        monthReimbursement.setMonth(month);
+	        monthReimbursement.setYear(year);
+	        monthReimbursement.setTotalAmount(total);
+
+	        return monthReimbursementRepository.save(monthReimbursement);
+	    }
+	    
+
+}

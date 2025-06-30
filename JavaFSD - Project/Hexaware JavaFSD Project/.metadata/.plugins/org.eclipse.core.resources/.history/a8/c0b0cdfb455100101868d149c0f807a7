@@ -1,0 +1,70 @@
+package com.payrollmanagement.easypay.controller;
+
+import com.payrollmanagement.easypay.enums.RequestStatus;
+import com.payrollmanagement.easypay.model.OvertimeRequest;
+import com.payrollmanagement.easypay.service.OvertimeRequestService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/overtime-request")
+@CrossOrigin(origins = "http://localhost:5173")
+public class OvertimeRequestController {
+
+    @Autowired
+    private OvertimeRequestService overtimeRequestService;
+
+    // Employee requests overtime
+    @PostMapping("/request")
+    public ResponseEntity<?> requestOvertime(
+            @RequestParam int employeeId,
+            @RequestParam String date, // "yyyy-MM-dd"
+            @RequestParam double hours,
+            @RequestParam String description
+    ) {
+        LocalDate reqDate = LocalDate.parse(date);
+        return ResponseEntity.ok(overtimeRequestService.requestOvertime(employeeId, reqDate, hours, description));
+    }
+
+    // Admin approves/rejects a request
+    @PutMapping("/update-status")
+    public ResponseEntity<?> updateStatus(
+            @RequestParam int requestId,
+            @RequestParam RequestStatus status,
+            @RequestParam(required = false) Integer approverId
+    ) {
+        return ResponseEntity.ok(overtimeRequestService.updateStatus(requestId, status, approverId));
+    }
+
+    // Get all requests by employee
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<List<OvertimeRequest>> getRequestsByEmployee(@PathVariable int employeeId) {
+        return ResponseEntity.ok(overtimeRequestService.getRequestsByEmployee(employeeId));
+    }
+
+    // Payroll: get total OT hours and amount
+    @GetMapping("/payroll-summary")
+    public ResponseEntity<?> getPayrollSummary(
+            @RequestParam int employeeId,
+            @RequestParam int month,
+            @RequestParam int year
+    ) {
+        double hours = overtimeRequestService.getTotalApprovedHoursForEmployeeForMonth(employeeId, month, year);
+        double amount = overtimeRequestService.getTotalApprovedAmountForEmployeeForMonth(employeeId, month, year);
+        return ResponseEntity.ok(new OvertimePayrollSummary(hours, amount));
+    }
+
+    // Helper DTO for payroll summary
+    public static class OvertimePayrollSummary {
+        public double totalHours;
+        public double totalAmount;
+        public OvertimePayrollSummary(double h, double a) {
+            this.totalHours = h;
+            this.totalAmount = a;
+        }
+    }
+}

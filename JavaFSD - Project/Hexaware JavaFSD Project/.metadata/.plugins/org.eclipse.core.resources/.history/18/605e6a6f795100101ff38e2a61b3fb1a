@@ -1,0 +1,62 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.model.LeaveTypes;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+import com.payrollmanagement.easypay.repository.LeaveTypesRepository;
+
+@Service
+public class LeaveTypesService {
+	private LeaveTypesRepository leaveTypesRepository;
+    private CompanyRepository companyRepository;
+
+    public LeaveTypesService(LeaveTypesRepository leaveTypesRepository,
+                             CompanyRepository companyRepository) {
+        this.leaveTypesRepository = leaveTypesRepository;
+        this.companyRepository = companyRepository;
+    }
+
+    public LeaveTypes addLeaveType(int companyId, LeaveTypes leaveType) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        leaveType.setCompany(company);
+        return leaveTypesRepository.save(leaveType);
+    }
+
+    public LeaveTypes getById(int id) {
+        return leaveTypesRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave Type Not Found"));
+    }
+
+    public List<LeaveTypes> getAll() {
+        return leaveTypesRepository.findAll();
+    }
+
+    public List<LeaveTypes> getByCompanyId(int companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        return leaveTypesRepository.getByCompanyId(companyId);
+    }
+
+    public LeaveTypes updateLeaveType(int id, int companyId, LeaveTypes updatedLeaveType) {
+        LeaveTypes existing = leaveTypesRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave Type Not Found"));
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+
+        existing.setName(updatedLeaveType.getName());
+        existing.setAnnualQuota(updatedLeaveType.getAnnualQuota());
+        existing.setIsPaid(updatedLeaveType.getIsPaid());
+        existing.setIsCarryForward(updatedLeaveType.getIsCarryForward());
+        existing.setCompany(company);
+
+        return leaveTypesRepository.save(existing);
+    }
+
+}

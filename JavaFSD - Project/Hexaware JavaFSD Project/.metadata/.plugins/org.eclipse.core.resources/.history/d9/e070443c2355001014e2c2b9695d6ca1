@@ -1,0 +1,74 @@
+package com.payrollmanagement.easypay.controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.model.BlockedDay;
+import com.payrollmanagement.easypay.service.BlockedDayService;
+
+@RestController
+@RequestMapping("/api/blocked-day")
+@CrossOrigin(origins = "http://localhost:5173")
+public class BlockedDayController {
+	@Autowired
+    private BlockedDayService blockedDayService;
+
+    private Logger logger = LoggerFactory.getLogger("BlockedDayController");
+
+    @PostMapping("/add/{companyId}")
+    public ResponseEntity<?> addBlockedDay(@PathVariable int companyId,
+                                           @RequestBody BlockedDay blockedDay) {
+        logger.info("Adding blocked day for company ID: {}", companyId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(blockedDayService.addBlockedDay(companyId, blockedDay));
+    }
+
+    @GetMapping("/getById/{id}")
+    public ResponseEntity<?> getBlockedDayById(@PathVariable int id) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(blockedDayService.getBlockedDayById(id));
+    }
+
+    @GetMapping("/getAll")
+    public ResponseEntity<?> getAllBlockedDays() {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(blockedDayService.getAllBlockedDays());
+    }
+
+    @GetMapping("/getByCompanyId/{companyId}")
+    public ResponseEntity<?> getBlockedDaysByCompanyId(@PathVariable int companyId) {
+        logger.info("Fetching blocked days for company ID: {}", companyId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(blockedDayService.getBlockedDaysByCompanyId(companyId));
+    }
+
+    @PutMapping("/update/{id}/{companyId}")
+    public ResponseEntity<BlockedDay> updateBlockedDay(@PathVariable int id,
+                                                       @PathVariable int companyId,
+                                                       @RequestBody BlockedDay updatedBlockedDay) {
+        logger.info("Updating blocked day ID: {}", id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(blockedDayService.updateBlockedDay(id, companyId, updatedBlockedDay));
+    }
+    
+    @PostMapping("/block-weekends/{companyId}")
+    public ResponseEntity<?> blockAllWeekendsForYear(
+            @PathVariable int companyId,
+            @RequestParam int year) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(blockedDayService.blockAllWeekendsForYear(companyId, year));
+    }
+
+}

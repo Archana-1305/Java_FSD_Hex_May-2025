@@ -1,0 +1,59 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Allowances;
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.EmployeeAllowance;
+
+import com.payrollmanagement.easypay.repository.AllowancesRepository;
+
+import com.payrollmanagement.easypay.repository.EmployeeAllowanceRepository;
+import com.payrollmanagement.easypay.repository.EmployeeRepository;
+
+@Service
+public class EmployeeAllowanceService {
+
+    private  EmployeeAllowanceRepository employeeAllowanceRepository;
+    private EmployeeRepository employeeRepository;
+    private AllowancesRepository allowancesRepository;
+    
+
+
+    
+    public EmployeeAllowanceService(EmployeeAllowanceRepository employeeAllowanceRepository,
+			EmployeeRepository employeeRepository, AllowancesRepository allowancesRepository) {
+		super();
+		this.employeeAllowanceRepository = employeeAllowanceRepository;
+		this.employeeRepository = employeeRepository;
+		this.allowancesRepository = allowancesRepository;
+	}
+
+
+	// Get allowance summary for a specific employee by month/year
+    public EmployeeAllowance getByEmpMonthYear(int empId, int month, int year) {
+        return employeeAllowanceRepository
+                .findByEmployeeIdAndMonthAndYear(empId, month, year)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee allowance not found"));
+    }
+
+
+	public Object assignAllowances(int employeeId, int allowanceId, EmployeeAllowance employeeAllowance) {
+		// Fetch Employee by employeeId
+	    Employee employee = employeeRepository.findById(employeeId)
+	        .orElseThrow(() -> new ResourceNotFoundException("Employee ID Invalid"));
+
+	    // Fetch Allowance by allowanceId
+	    Allowances allowance = allowancesRepository.findById(allowanceId)
+	        .orElseThrow(() -> new ResourceNotFoundException("Allowance ID Invalid"));
+
+	    // Set employee and allowance on the EmployeeAllowance object
+	    employeeAllowance.setEmployee(employee);
+	    employeeAllowance.setAllowances(allowance);
+
+	    return employeeAllowanceRepository.save(employeeAllowance);
+	}
+}

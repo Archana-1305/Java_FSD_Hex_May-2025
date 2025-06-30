@@ -1,0 +1,10 @@
+package com.payrollmanagement.easypay.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.payrollmanagement.easypay.model.OvertimePolicy;
+
+import java.util.Optional;
+
+public interface OvertimePolicyRepository extends JpaRepository<OvertimePolicy, Integer> {
+    Optional<OvertimePolicy> findByDesignationId(int designationId);
+}

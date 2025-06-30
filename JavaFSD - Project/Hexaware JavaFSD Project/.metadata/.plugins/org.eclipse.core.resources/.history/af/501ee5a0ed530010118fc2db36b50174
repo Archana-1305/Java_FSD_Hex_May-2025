@@ -1,0 +1,18 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.enums.States;
+import com.payrollmanagement.easypay.model.Company;
+
+public interface CompanyRepository extends JpaRepository<Company, Integer> {
+
+	@Query("Select c.state from Company c  ")
+	List<States> getAllStates();
+
+	
+
+}

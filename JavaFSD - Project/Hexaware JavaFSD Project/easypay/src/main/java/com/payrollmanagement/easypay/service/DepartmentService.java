@@ -1,0 +1,86 @@
+package com.payrollmanagement.easypay.service;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.dto.DepartmentDto;
+import com.payrollmanagement.easypay.exception.DepartmentNotFoundException;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.model.Department;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+import com.payrollmanagement.easypay.repository.DepartmentRepository;
+
+@Service
+public class DepartmentService {
+	
+	private final DepartmentRepository departmentRepository;
+	private final CompanyRepository companyRepository;
+
+	public DepartmentService(DepartmentRepository departmentRepository, CompanyRepository companyRepository) {
+		this.departmentRepository = departmentRepository;
+		this.companyRepository = companyRepository;
+	}
+	
+	// Add Department
+    public Department addDepartment(int companyId, Department department) {
+        Company company = companyRepository.findById(companyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        department.setCompany(company);
+        department.setCreatedOn(LocalDate.now());
+        department.setIsActive(true);
+        department.setIsDelete(false);
+        return departmentRepository.save(department);
+    }
+    
+    //Get All Departments
+    public List<Department> getAllDepartments() {
+		return departmentRepository.getAllDepartments();
+	}
+    
+	// Get by ID
+    public DepartmentDto getDepartmentById(int id) {
+        Department dept = departmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Department Not Found"));
+        return DepartmentDto.fromEntity(dept);
+    }
+	
+	// Get all departments by company
+    public List<Department> getDepartmentsByCompanyId(int companyId) {
+        companyRepository.findById(companyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        List<Department> list= departmentRepository.getDepartmentsByCompanyId(companyId);
+        if (list != null && list.isEmpty())
+        	throw new DepartmentNotFoundException("No Department Found");
+        return list;
+    }
+    
+	// Update
+	public Department updateDepartment(int id, Department updatedDept) {
+		Department dept = departmentRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Department Id Invalid"));
+
+		if (updatedDept.getDepartmentName() != null)
+			dept.setDepartmentName(updatedDept.getDepartmentName());
+		if (updatedDept.getDepartmentCode() != null)
+			dept.setDepartmentCode(updatedDept.getDepartmentCode());
+		if (updatedDept.getDescription() != null)
+			dept.setDescription(updatedDept.getDescription());
+		if(updatedDept.getIsActive() != null)
+		    dept.setIsActive(updatedDept.getIsActive());
+
+		return departmentRepository.save(dept);
+	}
+
+	//Soft Delete
+	public void simulateDeleteById(int id) {
+		Department dept = departmentRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Department Id Invalid"));	
+		dept.setIsDelete(true);
+		departmentRepository.save(dept);
+		
+	}
+
+}

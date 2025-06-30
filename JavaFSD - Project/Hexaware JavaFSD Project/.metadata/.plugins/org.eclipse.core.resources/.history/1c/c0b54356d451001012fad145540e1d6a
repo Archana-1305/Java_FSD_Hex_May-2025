@@ -1,0 +1,19 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.payrollmanagement.easypay.enums.TaxRegime;
+import com.payrollmanagement.easypay.model.IncomeTaxSlab;
+import com.payrollmanagement.easypay.model.Payslip;
+
+public interface IncomeTaxSlabRepository extends JpaRepository<IncomeTaxSlab, Integer>  {
+
+	//List<IncomeTaxSlab> findByFinancialYearAndTaxRegime(String financialYear, TaxRegime taxRegime);
+
+	Optional<IncomeTaxSlab> findMatchingSlab(int year, double annualGross);
+	
+
+}

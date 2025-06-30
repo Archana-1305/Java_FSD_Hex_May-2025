@@ -1,0 +1,8 @@
+package com.payrollmanagement.easypay.enums;
+
+public enum PayrollRunStatus {
+	DRAFT,
+    PENDING_APPROVAL,
+    PROCESSED, PENDING,REVISED,REVISE
+
+}

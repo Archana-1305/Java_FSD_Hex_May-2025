@@ -1,0 +1,73 @@
+package com.payrollmanagement.easypay.model;
+
+
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "attendance_record")
+public class AttendanceRecord  {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private int year;
+    private int month;
+    private int totalWorkingDays;
+    private int totalPayableDays;
+
+    @ManyToOne
+    private Employee employee;
+
+   
+
+    // Getters and setters
+    public int getId() {
+        return id;
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
+    }
+
+    public int getMonth() {
+        return month;
+    }
+
+    public void setMonth(int month) {
+        this.month = month;
+    }
+
+    public int getTotalWorkingDays() {
+        return totalWorkingDays;
+    }
+
+    public void setTotalWorkingDays(int totalWorkingDays) {
+        this.totalWorkingDays = totalWorkingDays;
+    }
+
+    public int getTotalPayableDays() {
+        return totalPayableDays;
+    }
+
+    public void setTotalPayableDays(int totalPayableDays) {
+        this.totalPayableDays = totalPayableDays;
+    }
+
+    public Employee getEmployee() {
+        return employee;
+    }
+
+    public void setEmployee(Employee employee) {
+        this.employee = employee;
+    }
+}

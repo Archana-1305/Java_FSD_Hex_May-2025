@@ -1,0 +1,7 @@
+package com.payrollmanagement.easypay.repository;
+
+import com.payrollmanagement.easypay.model.EmployeeAllowanceItem;
+
+public class EmployeeAllowanceItemRepository extends JpaRepository<EmployeeAllowanceItem, Integer> {
+
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item key="hasShownOverlayPopupBefore" value="true"/>
+	<section name="java.lang.Class">
+		<item key="replaceBarOpen" value="true"/>
+		<list key="findhistory">
+			<item value="CompanyLocationDTO"/>
+			<item value="DepartmentDetailDTO"/>
+			<item value="DesignationDetailDTO"/>
+			<item value="BigDecimal"/>
+		</list>
+		<list key="replacehistory">
+			<item value="CompanyLocationDto"/>
+			<item value="DepartmentDto"/>
+			<item value="DesignationDetailDto"/>
+			<item value="double"/>
+		</list>
+	</section>
+</section>

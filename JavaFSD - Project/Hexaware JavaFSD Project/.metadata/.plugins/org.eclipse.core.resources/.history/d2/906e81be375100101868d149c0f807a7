@@ -1,0 +1,43 @@
+package com.payrollmanagement.easypay.dto;
+
+import java.time.LocalDate;
+
+import com.payrollmanagement.easypay.model.PayrollPolicy;
+
+public class PayrollPolicyDto {
+    private int id;
+    private String policyName;
+    private String policyCode;
+    private String description;
+    private LocalDate effectiveFrom;
+    private LocalDate effectiveTo;
+    private Boolean isActive;
+    private LocalDate createdOn;
+    private int companyId;
+    private String companyName;
+
+    // Getters and setters...
+
+    public static PayrollPolicyDto fromEntity(PayrollPolicy policy) {
+        PayrollPolicyDto dto = new PayrollPolicyDto();
+        dto.id = policy.getId();
+        dto.policyName = policy.get();
+        dto.policyCode = policy.getPolicyCode();
+        dto.description = policy.getDescription();
+        dto.effectiveFrom = policy.getEffectiveFrom();
+        dto.effectiveTo = policy.getEffectiveTo();
+        dto.isActive = policy.getIsActive();
+        dto.createdOn = policy.getCreatedOn();
+        if (policy.getCompany() != null) {
+            dto.companyId = policy.getCompany().getId();
+            dto.companyName = policy.getCompany().getName();
+        }
+        return dto;
+    }
+
+    public static java.util.List<PayrollPolicyDto> convertPolicyListToDto(java.util.List<PayrollPolicy> policies) {
+        return policies.stream()
+                .map(PayrollPolicyDto::fromEntity)
+                .collect(java.util.stream.Collectors.toList());
+    }
+}

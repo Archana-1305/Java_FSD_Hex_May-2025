@@ -1,0 +1,157 @@
+package com.payrollmanagement.easypay.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.DuplicateResourceException;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.model.PayrollPolicy;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+import com.payrollmanagement.easypay.repository.PayrollPolicyRepository;
+
+@Service
+public class PayrollPolicyService {
+	private final PayrollPolicyRepository payrollPolicyRepository;
+	private final CompanyRepository companyRepository;
+
+	public PayrollPolicyService(PayrollPolicyRepository payrollPolicyRepository, CompanyRepository companyRepository) {
+		this.payrollPolicyRepository = payrollPolicyRepository;
+		this.companyRepository = companyRepository;
+	}
+
+	// Add Payroll Policy
+	public PayrollPolicy addPayrollPolicy(int companyId, PayrollPolicy newPolicy) {
+		Company company = companyRepository.findById(companyId)
+				.orElseThrow(() -> new ResourceNotFoundException("Company not found with ID: " + companyId));
+
+		// Ensure a policy does not already exist for this company
+		payrollPolicyRepository.findByCompanyId(companyId).ifPresent(existingPolicy -> {
+			throw new DuplicateResourceException(
+					"A payroll policy already exists for this company. Please use the update endpoint.");
+		});
+
+		newPolicy.setCompany(company);
+
+		
+		// If PF is disabled on creation, reset all related values.
+		if (!newPolicy.getIsPfEnabled()) {
+			newPolicy.setEmployeePfRate(0);
+			newPolicy.setEmployerPfRate(0);
+			newPolicy.setEpsRate(0);
+			newPolicy.setPfCeilingRequired(false);
+			newPolicy.setPfCeilingAmount(0);
+		} else if (!newPolicy.getPfCeilingRequired()) {
+			// If PF is enabled but ceiling is not required, ensure amount is zero.
+			newPolicy.setPfCeilingAmount(0);
+		}
+
+		// If ESI is disabled on creation, reset all related values.
+		if (!newPolicy.getEsiEnabled()) {
+			newPolicy.setEmployeeEsiRate(0);
+			newPolicy.setEmployerEsiRate(0);
+			newPolicy.setEsiEligibilityCeiling(0);
+		}
+
+		return payrollPolicyRepository.save(newPolicy);
+	}
+
+	// Get All
+	public List<PayrollPolicy> getAllPayrollPolicies() {
+		return payrollPolicyRepository.findAll();
+	}
+
+	// Get by ID
+	public PayrollPolicy getPayrollPolicyById(int id) {
+		return payrollPolicyRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Payroll Policy Not Found"));
+	}
+
+	// Get by Company
+	public PayrollPolicy getPayrollPolicyByCompanyId(int companyId) {
+		companyRepository.findById(companyId).orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+		PayrollPolicy policy = payrollPolicyRepository.getPayrollPolicyByCompanyId(companyId);
+		if (policy == null)
+			throw new ResourceNotFoundException("Payroll Policy Not Found for Company");
+		return policy;
+	}
+
+	// Update
+	 public PayrollPolicy updatePayrollPolicy(int policyId, PayrollPolicy updatedPolicy) {
+	        PayrollPolicy existingPolicy = payrollPolicyRepository.findById(policyId)
+	                .orElseThrow(() -> new ResourceNotFoundException("Payroll Policy not found with ID: " + policyId));
+	        
+	        // --- PARTIAL UPDATE LOGIC ---
+	        // Basic fields
+	        if (updatedPolicy.getPayCycleStartDay() != 0)
+	        	existingPolicy.setPayCycleStartDay(updatedPolicy.getPayCycleStartDay());
+	        
+	        if (updatedPolicy.getPayCycleEndDay() != 0) existingPolicy.setPayCycleEndDay(updatedPolicy.getPayCycleEndDay());
+	        if (updatedPolicy.getBasicPercent() != 0) existingPolicy.setBasicPercent(updatedPolicy.getBasicPercent());
+	        if (updatedPolicy.getHraMetroPercent() != 0) existingPolicy.setHraMetroPercent(updatedPolicy.getHraMetroPercent());
+	        if (updatedPolicy.getHraNonMetroPercent() != 0) existingPolicy.setHraNonMetroPercent(updatedPolicy.getHraNonMetroPercent());
+	        if (updatedPolicy.getDaPercent() != 0) existingPolicy.setDaPercent(updatedPolicy.getDaPercent());
+	        if (updatedPolicy.getMedicalAllowance() != 0) existingPolicy.setMedicalAllowance(updatedPolicy.getMedicalAllowance());
+	        if (updatedPolicy.getLtaAllowance() != 0) existingPolicy.setLtaAllowance(updatedPolicy.getLtaAllowance());
+	        if (updatedPolicy.getSpecialAllowance() != 0) existingPolicy.setSpecialAllowance(updatedPolicy.getSpecialAllowance());
+	        if (updatedPolicy.getFoodCouponAmount() != 0) existingPolicy.setFoodCouponAmount(updatedPolicy.getFoodCouponAmount());
+
+	        // Tax Toggles
+	        if (updatedPolicy.getProfessionalTaxEnabled() != null) existingPolicy.setProfessionalTaxEnabled(updatedPolicy.getProfessionalTaxEnabled());
+	        if (updatedPolicy.getIncomeTaxEnabled() != null) existingPolicy.setIncomeTaxEnabled(updatedPolicy.getIncomeTaxEnabled());
+	        
+	        // PF Logic
+	        if (updatedPolicy.getIsPfEnabled() != null) {
+	            existingPolicy.setIsPfEnabled(updatedPolicy.getIsPfEnabled());
+	            if (!updatedPolicy.getIsPfEnabled()) { // If PF is explicitly set to false
+	                existingPolicy.setEmployeePfRate(0);
+	                existingPolicy.setEmployerPfRate(0);
+	                existingPolicy.setEpsRate(0);
+	                existingPolicy.setPfCeilingRequired(false);
+	                existingPolicy.setPfCeilingAmount(0);
+	            }
+	        }
+
+	        if (existingPolicy.getIsPfEnabled()) { // Only update PF values if it's enabled
+	            if (updatedPolicy.getEmployeePfRate() != 0) existingPolicy.setEmployeePfRate(updatedPolicy.getEmployeePfRate());
+	            if (updatedPolicy.getEmployerPfRate() != 0) existingPolicy.setEmployerPfRate(updatedPolicy.getEmployerPfRate());
+	            if (updatedPolicy.getEpsRate() != 0) existingPolicy.setEpsRate(updatedPolicy.getEpsRate());
+	            
+	            if (updatedPolicy.getPfCeilingRequired() != null) {
+	                existingPolicy.setPfCeilingRequired(updatedPolicy.getPfCeilingRequired());
+	                if (!updatedPolicy.getPfCeilingRequired()) { // If ceiling is explicitly set to false
+	                    existingPolicy.setPfCeilingAmount(0);
+	                }
+	            }
+
+	            if(existingPolicy.getPfCeilingRequired()){
+	                 if(updatedPolicy.getPfCeilingAmount() != 0) existingPolicy.setPfCeilingAmount(updatedPolicy.getPfCeilingAmount());
+	            }
+	        }
+	        
+	        // ESI Logic
+	        if (updatedPolicy.getEsiEnabled() != null) {
+	            existingPolicy.setEsiEnabled(updatedPolicy.getEsiEnabled());
+	            if (!updatedPolicy.getEsiEnabled()) { // If ESI is explicitly set to false
+	                existingPolicy.setEmployeeEsiRate(0);
+	                existingPolicy.setEmployerEsiRate(0);
+	                existingPolicy.setEsiEligibilityCeiling(0);
+	            }
+	        }
+	        
+	        if (existingPolicy.getEsiEnabled()) { // Only update ESI values if it's enabled
+	            if (updatedPolicy.getEmployeeEsiRate() != 0) existingPolicy.setEmployeeEsiRate(updatedPolicy.getEmployeeEsiRate());
+	            if (updatedPolicy.getEmployerEsiRate() != 0) existingPolicy.setEmployerEsiRate(updatedPolicy.getEmployerEsiRate());
+	            if (updatedPolicy.getEsiEligibilityCeiling() != 0) existingPolicy.setEsiEligibilityCeiling(updatedPolicy.getEsiEligibilityCeiling());
+	        }
+
+	        return payrollPolicyRepository.save(existingPolicy);
+	    }
+	 public void softDeletePolicy(int id) {
+	        PayrollPolicy policy = payrollPolicyRepository.findById(id)
+	            .orElseThrow(() -> new ResourceNotFoundException("Policy Id Invalid"));
+	        policy.setIsDelete(true);
+	        payrollPolicyRepository.save(policy);
+	    }
+}

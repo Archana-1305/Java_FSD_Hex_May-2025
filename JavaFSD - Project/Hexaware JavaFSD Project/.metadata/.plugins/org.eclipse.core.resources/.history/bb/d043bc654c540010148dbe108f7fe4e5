@@ -1,0 +1,117 @@
+package com.payrollmanagement.easypay.controller;
+
+import java.security.Principal;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.service.EmployeeService;
+
+@RestController
+@RequestMapping("/api/employee")
+@CrossOrigin(origins = "http://localhost:5173")
+public class EmployeeController {
+	
+	@Autowired
+    private EmployeeService employeeService;
+
+    private Logger logger = LoggerFactory.getLogger("EmployeeController");
+    
+    @PostMapping("/add/{departmentId}/{designationId}/{companyId}")
+    public Employee addEmployee(@PathVariable int departmentId,
+                                @PathVariable int designationId,
+                                @PathVariable int companyId,
+                                @RequestBody Employee employee) {
+        logger.info("Adding new employee to department: {}, designation: {}, company: {}", departmentId, designationId, companyId);
+        return employeeService.addEmployee(employee, departmentId, designationId, companyId);
+    }
+    
+    @GetMapping("/getAll")
+    public ResponseEntity<List<Employee>> getAllEmployees() {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employeeService.getAllEmployees());
+    }
+    
+    @GetMapping("/getByDesignationId/{designationId}")
+    public ResponseEntity<?> getEmployeesByDesignationId(@PathVariable int designationId) {
+        logger.info("Fetching employees for designation id: " + designationId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employeeService.getEmployeesByDesignationId(designationId));
+    }
+    
+    @GetMapping("/getByDepartmentId/{departmentId}")
+    public ResponseEntity<?> getEmployeesByDepartmentId(@PathVariable int departmentId) {
+        logger.info("Fetching employees for department id: " + departmentId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employeeService.getEmployeesByDepartmentId(departmentId));
+    }
+
+   
+
+    @GetMapping("/getByCompanyId/{companyId}")
+    public ResponseEntity<?> getEmployeesByCompanyId(@PathVariable int companyId) {
+        logger.info("Fetching employees for company id: " + companyId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employeeService.getEmployeesByCompanyId(companyId));
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateEmployee(@PathVariable int id,
+                                            @RequestBody Employee updatedEmployee) {
+        logger.info("Updating employee id: " + id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employeeService.updateEmployee(id, updatedEmployee));
+    }
+    
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> softDeleteEmployee(@PathVariable int id) {
+        logger.info("Soft deleting employee with id: {}", id);
+        employeeService.softDeleteEmployee(id);
+        return ResponseEntity.ok("Employee marked as deleted");
+    }
+    
+    @GetMapping("/get")
+    public Employee getMyInfo(Principal principal) {
+        return employeeService.getEmployeeInfo(principal.getName());
+    }
+
+    
+
+    /* AIM      : To filter employees by location and department
+     * PATH     : /api/employee/filter?locationId={id}&departmentId={id}
+     * METHOD   : GET
+     * RESPONSE : List of employees
+  /* AIM      : To filter employees by location and department
+     * PATH     : /api/employee/filter?locationId={id}&departmentId={id}
+     * METHOD   : GET
+     * RESPONSE : List of employees
+     * */
+//    @GetMapping("/filter")
+//    public ResponseEntity<List<Employee>> getFilteredEmployees(
+//            @RequestParam int locationId,
+//            @RequestParam int departmentId) {
+//
+//        logger.info("Filtering employees for locationId: {}, departmentId: {}", locationId, departmentId);
+//        return ResponseEntity.ok(employeeService.getEmployeesByDeptAndLocation(departmentId, locationId));
+//    }
+}

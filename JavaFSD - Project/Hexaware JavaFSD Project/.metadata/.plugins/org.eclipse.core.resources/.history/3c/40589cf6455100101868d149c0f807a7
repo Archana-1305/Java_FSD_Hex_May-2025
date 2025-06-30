@@ -1,0 +1,102 @@
+package com.payrollmanagement.easypay.service;
+
+import com.payrollmanagement.easypay.enums.RequestStatus;
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.*;
+import com.payrollmanagement.easypay.repository.*;
+
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Service
+public class OvertimeRequestService {
+
+    private final OvertimeRequestRepository overtimeRequestRepo;
+    private final EmployeeRepository employeeRepo;
+    private final OvertimePolicyRepository otPolicyRepo;
+
+    public OvertimeRequestService(OvertimeRequestRepository overtimeRequestRepo,
+                                  EmployeeRepository employeeRepo,
+                                  OvertimePolicyRepository otPolicyRepo) {
+        this.overtimeRequestRepo = overtimeRequestRepo;
+        this.employeeRepo = employeeRepo;
+        this.otPolicyRepo = otPolicyRepo;
+    }
+
+    // Employee requests OT
+    public OvertimeRequest requestOvertime(int employeeId, LocalDate date, double hours, String description) {
+        Employee employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+
+        OvertimePolicy otPolicy = otPolicyRepo.findByDesignationId(employee.getDesignation().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("No OT policy for employee designation"));
+
+        // Check if OT is applicable
+        if (!otPolicy.isOtApplicable() || !otPolicy.isActive()) {
+            throw new IllegalArgumentException("Overtime is not applicable for this designation.");
+        }
+
+        // Check day limits
+        if (hours < otPolicy.getMinHoursPerDay() || hours > otPolicy.getMaxHoursPerDay()) {
+            throw new IllegalArgumentException("Requested hours not within allowed daily range.");
+        }
+
+        // Check month limits
+        int month = date.getMonthValue();
+        int year = date.getYear();
+        Double totalThisMonth = overtimeRequestRepo.getTotalApprovedHoursForEmployeeForMonth(employeeId, month, year);
+        if (totalThisMonth == null) totalThisMonth = 0.0;
+        if (totalThisMonth + hours > otPolicy.getMaxHoursPerMonth()) {
+            throw new IllegalArgumentException("Monthly OT limit exceeded.");
+        }
+
+        OvertimeRequest req = new OvertimeRequest();
+        req.setDate(date);
+        req.setHours(hours);
+        req.setDescription(description);
+        req.setStatus(RequestStatus.PENDING);
+        req.setEmployee(employee);
+        req.setOvertimePolicy(otPolicy);
+        req.setApprover(null); // Not approved yet
+
+        return overtimeRequestRepo.save(req);
+    }
+
+    // Admin approves/rejects a request
+    public OvertimeRequest updateStatus(int requestId, RequestStatus status, Integer approverId) {
+        OvertimeRequest req = overtimeRequestRepo.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("OT request not found"));
+        req.setStatus(status);
+
+        if (approverId != null) {
+            Employee approver = employeeRepo.findById(approverId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Approver not found"));
+            req.setApprover(approver);
+        }
+
+        return overtimeRequestRepo.save(req);
+    }
+
+    // Get all requests for employee
+    public List<OvertimeRequest> getRequestsByEmployee(int employeeId) {
+        return overtimeRequestRepo.findByEmployeeId(employeeId);
+    }
+
+    // For payroll calculation: get total OT hours and amount for an employee in a month
+    public double getTotalApprovedHoursForEmployeeForMonth(int employeeId, int month, int year) {
+        Double total = overtimeRequestRepo.getTotalApprovedHoursForEmployeeForMonth(employeeId, month, year);
+        return total != null ? total : 0.0;
+    }
+
+    public double getTotalApprovedAmountForEmployeeForMonth(int employeeId, int month, int year) {
+        List<OvertimeRequest> requests = overtimeRequestRepo.getApprovedRequestsForEmployeeForMonth(employeeId, month, year);
+        double total = 0.0;
+        for (OvertimeRequest req : requests) {
+            double rate = req.getOvertimePolicy().getRatePerHour();
+            total += req.getHours() * rate;
+        }
+        return total;
+    }
+}

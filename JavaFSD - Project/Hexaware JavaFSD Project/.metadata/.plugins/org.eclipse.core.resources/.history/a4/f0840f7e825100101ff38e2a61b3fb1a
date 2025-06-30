@@ -1,0 +1,16 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.model.LeaveTypes;
+
+public interface LeaveTypesRepository extends JpaRepository<LeaveTypes, Integer> {
+
+	@Query("Select lt from LeaveTypes lt where lt.company.id=?1")
+	List<LeaveTypes> getByCompanyId(Company company);
+
+}

@@ -1,0 +1,72 @@
+package com.payrollmanagement.easypay.dto;
+import com.payrollmanagement.easypay.enums.City;
+import com.payrollmanagement.easypay.enums.States;
+import com.payrollmanagement.easypay.model.CompanyLocation;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CompanyLocationDto {
+    private int id;
+    private String address;
+    private City city;
+    private States state;
+    private String pfCode;
+    private String esiCode;
+    private String ptCode;
+    private Boolean isActive;
+    private Boolean isDelete;
+    private int companyId;
+    private String companyName;
+
+    // Getters and setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public City getCity() { return city; }
+    public void setCity(City city) { this.city = city; }
+    public States getState() { return state; }
+    public void setState(States state) { this.state = state; }
+    public String getPfCode() { return pfCode; }
+    public void setPfCode(String pfCode) { this.pfCode = pfCode; }
+    public String getEsiCode() { return esiCode; }
+    public void setEsiCode(String esiCode) { this.esiCode = esiCode; }
+    public String getPtCode() { return ptCode; }
+    public void setPtCode(String ptCode) { this.ptCode = ptCode; }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public Boolean getIsDelete() { return isDelete; }
+    public void setIsDelete(Boolean isDelete) { this.isDelete = isDelete; }
+    public int getCompanyId() { return companyId; }
+    public void setCompanyId(int companyId) { this.companyId = companyId; }
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
+
+    // Convert a single entity to DTO
+    public static CompanyLocationDto fromEntity(CompanyLocation location) {
+        CompanyLocationDto dto = new CompanyLocationDto();
+        dto.setId(location.getId());
+        dto.setAddress(location.getAddress());
+        dto.setCity(location.getCity());
+        dto.setState(location.getState());
+        dto.setPfCode(location.getPfCode());
+        dto.setEsiCode(location.getEsiCode());
+        dto.setPtCode(location.getPtCode());
+        dto.setIsActive(location.getIsActive());
+        dto.setIsDelete(location.getIsDelete());
+        if (location.getCompany() != null) {
+            dto.setCompanyId(location.getCompany().getId());
+            dto.setCompanyName(location.getCompany().getName());
+        }
+        return dto;
+    }
+
+    // Convert a list of entities to DTOs
+    public static List<CompanyLocationDto> fromEntityList(List<CompanyLocation> locations) {
+        List<CompanyLocationDto> dtoList = new ArrayList<>();
+        for (CompanyLocation location : locations) {
+            dtoList.add(fromEntity(location));
+        }
+        return dtoList;
+    }
+}

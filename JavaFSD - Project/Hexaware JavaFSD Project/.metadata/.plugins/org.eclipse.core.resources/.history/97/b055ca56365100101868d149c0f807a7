@@ -1,0 +1,259 @@
+package com.payrollmanagement.easypay.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "payroll_policies")
+public class PayrollPolicy {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private int id;
+
+	// Pay Cycle
+	private int payCycleStartDay;
+	private int payCycleEndDay;
+
+	// PF
+	private Boolean isPfEnabled;
+	private double employeePfRate;
+	private double employerPfRate;
+	private double epsRate;
+	private Boolean pfCeilingRequired;
+	private int pfCeilingAmount;
+
+	// ESI
+	private Boolean esiEnabled;
+	private double employeeEsiRate;
+	private double employerEsiRate;
+	private int esiEligibilityCeiling;
+
+	// Tax Rules
+	private Boolean professionalTaxEnabled;
+	private Boolean incomeTaxEnabled;
+
+	// payroll
+	private double basicPercent;
+	private double hraMetroPercent;
+	private double hraNonMetroPercent;
+	private double daPercent;
+	private double medicalAllowance;
+	private double ltaAllowance;
+	private double specialAllowance;
+	private double foodCouponAmount;
+	
+	private Boolean isDelete;
+
+	@OneToOne
+	private Company company;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getPayCycleStartDay() {
+		return payCycleStartDay;
+	}
+
+	public void setPayCycleStartDay(int payCycleStartDay) {
+		this.payCycleStartDay = payCycleStartDay;
+	}
+
+	public int getPayCycleEndDay() {
+		return payCycleEndDay;
+	}
+
+	public void setPayCycleEndDay(int payCycleEndDay) {
+		this.payCycleEndDay = payCycleEndDay;
+	}
+
+	public Boolean getIsPfEnabled() {
+		return isPfEnabled;
+	}
+
+	public void setIsPfEnabled(Boolean isPfEnabled) {
+		this.isPfEnabled = isPfEnabled;
+	}
+
+	public double getEmployeePfRate() {
+		return employeePfRate;
+	}
+
+	public void setEmployeePfRate(double employeePfRate) {
+		this.employeePfRate = employeePfRate;
+	}
+
+	public double getEmployerPfRate() {
+		return employerPfRate;
+	}
+
+	public void setEmployerPfRate(double employerPfRate) {
+		this.employerPfRate = employerPfRate;
+	}
+
+	public double getEpsRate() {
+		return epsRate;
+	}
+
+	public void setEpsRate(double epsRate) {
+		this.epsRate = epsRate;
+	}
+
+	public Boolean getPfCeilingRequired() {
+		return pfCeilingRequired;
+	}
+
+	public void setPfCeilingRequired(Boolean pfCeilingRequired) {
+		this.pfCeilingRequired = pfCeilingRequired;
+	}
+
+	public int getPfCeilingAmount() {
+		return pfCeilingAmount;
+	}
+
+	public void setPfCeilingAmount(int pfCeilingAmount) {
+		this.pfCeilingAmount = pfCeilingAmount;
+	}
+
+	public Boolean getEsiEnabled() {
+		return esiEnabled;
+	}
+
+	public void setEsiEnabled(Boolean esiEnabled) {
+		this.esiEnabled = esiEnabled;
+	}
+
+	public double getEmployeeEsiRate() {
+		return employeeEsiRate;
+	}
+
+	public void setEmployeeEsiRate(double employeeEsiRate) {
+		this.employeeEsiRate = employeeEsiRate;
+	}
+
+	public double getEmployerEsiRate() {
+		return employerEsiRate;
+	}
+
+	public void setEmployerEsiRate(double employerEsiRate) {
+		this.employerEsiRate = employerEsiRate;
+	}
+
+	public int getEsiEligibilityCeiling() {
+		return esiEligibilityCeiling;
+	}
+
+	public void setEsiEligibilityCeiling(int esiEligibilityCeiling) {
+		this.esiEligibilityCeiling = esiEligibilityCeiling;
+	}
+
+	public Boolean getProfessionalTaxEnabled() {
+		return professionalTaxEnabled;
+	}
+
+	public void setProfessionalTaxEnabled(Boolean professionalTaxEnabled) {
+		this.professionalTaxEnabled = professionalTaxEnabled;
+	}
+
+	public Boolean getIncomeTaxEnabled() {
+		return incomeTaxEnabled;
+	}
+
+	public void setIncomeTaxEnabled(Boolean incomeTaxEnabled) {
+		this.incomeTaxEnabled = incomeTaxEnabled;
+	}
+
+	public double getBasicPercent() {
+		return basicPercent;
+	}
+
+	public void setBasicPercent(double basicPercent) {
+		this.basicPercent = basicPercent;
+	}
+
+	public double getHraMetroPercent() {
+		return hraMetroPercent;
+	}
+
+	public void setHraMetroPercent(double hraMetroPercent) {
+		this.hraMetroPercent = hraMetroPercent;
+	}
+
+	public double getHraNonMetroPercent() {
+		return hraNonMetroPercent;
+	}
+
+	public void setHraNonMetroPercent(double hraNonMetroPercent) {
+		this.hraNonMetroPercent = hraNonMetroPercent;
+	}
+
+	public double getDaPercent() {
+		return daPercent;
+	}
+
+	public void setDaPercent(double daPercent) {
+		this.daPercent = daPercent;
+	}
+
+	public double getMedicalAllowance() {
+		return medicalAllowance;
+	}
+
+	public void setMedicalAllowance(double medicalAllowance) {
+		this.medicalAllowance = medicalAllowance;
+	}
+
+	public double getLtaAllowance() {
+		return ltaAllowance;
+	}
+
+	public void setLtaAllowance(double ltaAllowance) {
+		this.ltaAllowance = ltaAllowance;
+	}
+
+	public double getSpecialAllowance() {
+		return specialAllowance;
+	}
+
+	public void setSpecialAllowance(double specialAllowance) {
+		this.specialAllowance = specialAllowance;
+	}
+
+	public double getFoodCouponAmount() {
+		return foodCouponAmount;
+	}
+
+	public void setFoodCouponAmount(double foodCouponAmount) {
+		this.foodCouponAmount = foodCouponAmount;
+	}
+
+	public Company getCompany() {
+		return company;
+	}
+
+	public void setCompany(Company company) {
+		this.company = company;
+	}
+
+	public Boolean getIsDelete() {
+		return isDelete;
+	}
+
+	public void setIsDelete(Boolean isDelete) {
+		this.isDelete = isDelete;
+	}
+	
+	
+
+	
+	
+}

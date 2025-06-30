@@ -1,0 +1,76 @@
+package com.payrollmanagement.easypay.controller;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.payrollmanagement.easypay.model.PayrollPolicy;
+import com.payrollmanagement.easypay.service.PayrollPolicyService;
+
+@RestController
+@RequestMapping("/api/payroll-policy")
+@CrossOrigin(origins = "http://localhost:5173")
+public class PayrollPolicyController {
+	
+	@Autowired
+	private PayrollPolicyService payrollPolicyService;
+
+	private Logger logger = LoggerFactory.getLogger("PayrollPolicyController");
+	
+	@PostMapping("/add/{companyId}")
+    public ResponseEntity<?> addPayrollPolicy(@PathVariable int companyId, @RequestBody PayrollPolicy policy) {
+        logger.info("Adding payroll policy for company: " + companyId);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(payrollPolicyService.addPayrollPolicy(companyId, policy));
+    }
+
+    @GetMapping("/getAll")
+    public ResponseEntity<?> getAllPayrollPolicies() {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(payrollPolicyService.getAllPayrollPolicies());
+    }
+
+    @GetMapping("/getById/{id}")
+    public ResponseEntity<?> getPayrollPolicyById(@PathVariable int id) {
+        logger.info("Fetching payroll policy by id: " + id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(payrollPolicyService.getPayrollPolicyById(id));
+    }
+
+    @GetMapping("/getByCompanyId/{companyId}")
+    public ResponseEntity<?> getPayrollPolicyByCompanyId(@PathVariable int companyId) {
+        logger.info("Fetching payroll policy for company id: " + companyId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(payrollPolicyService.getPayrollPolicyByCompanyId(companyId));
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updatePayrollPolicy(@PathVariable int id, @RequestBody PayrollPolicy updatedPolicy) {
+        logger.info("Updating payroll policy id: " + id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(payrollPolicyService.updatePayrollPolicy(id, updatedPolicy));
+    }
+    
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> softDeletePolicy(@PathVariable int id) {
+        payrollPolicyService.softDeletePolicy(id);
+        return ResponseEntity.ok("Policy marked as deleted");
+    }
+
+}

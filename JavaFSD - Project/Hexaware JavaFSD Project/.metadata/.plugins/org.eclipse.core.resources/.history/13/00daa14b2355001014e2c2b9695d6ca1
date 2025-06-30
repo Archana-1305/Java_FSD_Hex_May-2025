@@ -1,0 +1,83 @@
+package com.payrollmanagement.easypay.service;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.payrollmanagement.easypay.exception.ResourceNotFoundException;
+import com.payrollmanagement.easypay.model.BlockedDay;
+import com.payrollmanagement.easypay.model.Company;
+import com.payrollmanagement.easypay.repository.BlockedDayRepository;
+import com.payrollmanagement.easypay.repository.CompanyRepository;
+
+@Service
+public class BlockedDayService {
+	private BlockedDayRepository blockedDayRepository;
+    private CompanyRepository companyRepository;
+
+    public BlockedDayService(BlockedDayRepository blockedDayRepository,
+                             CompanyRepository companyRepository) {
+        this.blockedDayRepository = blockedDayRepository;
+        this.companyRepository = companyRepository;
+    }
+
+    public BlockedDay addBlockedDay(int companyId, BlockedDay blockedDay) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        blockedDay.setCompany(company);
+        return blockedDayRepository.save(blockedDay);
+    }
+
+    public BlockedDay getBlockedDayById(int id) {
+        return blockedDayRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Blocked Day Not Found"));
+    }
+
+    public List<BlockedDay> getAllBlockedDays() {
+        return blockedDayRepository.findAll();
+    }
+
+    public List<BlockedDay> getBlockedDaysByCompanyId(int companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        return blockedDayRepository.getBlockedDaysByCompanyId(company);
+    }
+
+    public BlockedDay updateBlockedDay(int id, int companyId, BlockedDay updated) {
+        BlockedDay existing = blockedDayRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Blocked Day Not Found"));
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+
+        existing.setDate(updated.getDate());
+        existing.setReason(updated.getReason());
+        existing.setCompany(company);
+
+        return blockedDayRepository.save(existing);
+    }
+    
+    public List<BlockedDay> blockAllWeekendsForYear(int companyId, int year) {
+        Company company = companyRepository.findById(companyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Company Not Found"));
+        List<BlockedDay> created = new ArrayList<>();
+        LocalDate date = LocalDate.of(year, 1, 1);
+        LocalDate end = LocalDate.of(year, 12, 31);
+        for (; !date.isAfter(end); date = date.plusDays(1)) {
+            if (date.getDayOfWeek() == DayOfWeek.SATURDAY || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                if (!blockedDayRepository.existsByCompanyIdAndDate(companyId, date)) {
+                    BlockedDay bd = new BlockedDay();
+                    bd.setCompany(company);
+                    bd.setDate(date);
+                    bd.setReason("Weekend");
+                    created.add(blockedDayRepository.save(bd));
+                }
+            }
+        }
+        return created;
+    }
+
+}

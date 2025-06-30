@@ -1,0 +1,5 @@
+package com.payrollmanagement.easypay.dto;
+
+public class BulkAttendanceUpdateRequest {
+
+}

@@ -1,0 +1,33 @@
+package com.payrollmanagement.easypay.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+import com.payrollmanagement.easypay.service.EmployeeMonthlyAllowancesService;
+import com.payrollmanagement.easypay.model.EmployeeMonthlyAllowances;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/employee-monthly-allowance")
+@CrossOrigin(origins = "http://localhost:5173")
+public class EmployeeMonthlyAllowancesController {
+
+    @Autowired
+    private EmployeeMonthlyAllowancesService employeeMonthlyAllowancesService;
+
+    // Add allowance to all employees (e.g., festival bonus)
+    @PostMapping("/calculate/{employeeID}")
+    public ResponseEntity<?> calculateTotalAllowance( @PathVariable int employeeID,
+            @RequestParam int month,
+            @RequestParam int year        
+    ) {
+    	return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(employeeMonthlyAllowancesService.calculateTotalAllowance(employeeID,month,year));
+        
+    }
+
+    
+}

@@ -1,0 +1,27 @@
+package com.payrollmanagement.easypay.controller;
+
+import com.payrollmanagement.easypay.model.LeaveRequest;
+import com.payrollmanagement.easypay.service.LeaveRequestService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/leave-request")
+@CrossOrigin(origins = "http://localhost:5173")
+public class LeaveRequestController {
+
+    @Autowired
+    private LeaveRequestService leaveRequestService;
+
+    @PostMapping("/apply/{employeeId}/{leaveTypeId}/{approverId}")
+    public ResponseEntity<LeaveRequest> applyForLeave(
+            @PathVariable int employeeId,
+            @PathVariable int leaveTypeId,
+            @PathVariable int approverId,
+            @RequestBody LeaveRequest leaveRequest) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(leaveRequestService.applyForLeave(employeeId, leaveTypeId, approverId, leaveRequest));
+    }
+}

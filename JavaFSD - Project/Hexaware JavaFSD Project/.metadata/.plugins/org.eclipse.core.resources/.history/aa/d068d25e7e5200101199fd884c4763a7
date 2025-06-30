@@ -1,0 +1,191 @@
+package com.payrollmanagement.easypay;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+public class SecurityConfig {
+	@Autowired
+	private JwtFilter jwtFilter;
+	
+	@Bean
+	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		http
+		    .csrf((csrf) -> csrf.disable())
+		 
+		    .authorizeHttpRequests(authorize -> authorize
+					.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+					
+			//AUTH		
+			.requestMatchers("/api/user/signup").permitAll()
+	    	.requestMatchers("/api/user/token").permitAll()
+	    	.requestMatchers("/api/user/details").permitAll()
+	    	
+	    	// COMPANY
+	    	.requestMatchers("/api/company/add").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/company/getById/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/company/getAll").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/company/update/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	// COMPANY-LOCATION
+	    	.requestMatchers("/api/location/add/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/location/getById/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/location/getByCmpId/{companyId}").permitAll()
+	    	.requestMatchers("/api/location/update/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/location/delete/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/location/getAll").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	
+	    	// DEPARTMENT
+	    	.requestMatchers("/api/department/add/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/department/getAll").permitAll()	
+	    	.requestMatchers("/api/department/getById/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/department/getByCompanyId/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/department/update/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/department/delete/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	// DESIGNATION
+	    	.requestMatchers("/api/designation/add/{departmentId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/designation/getAll").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/designation/getById/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/designation/getByDepartmentId/{departmentId}").permitAll()
+	    	.requestMatchers("/api/designation/update/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/designation/delete/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	//EMPLOYEE
+	    	.requestMatchers("/api/employee/add/{departmentId}/{designationId}/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/employee/getAll").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/employee/getByDesignationId/{designationId}").permitAll()
+	    	.requestMatchers("/api/employee/getByDepartmentId/{departmentId}").permitAll()
+	    	.requestMatchers("/api/employee/getByCompanyId/{companyId}").permitAll()
+	    	.requestMatchers("/api/employee/update/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/employee/delete/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/employee/get").hasAuthority("EMPLOYEE")
+	    	
+	    	// PAYROLL POLICY
+	    	.requestMatchers("/api/payroll-policy/add/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/payroll-policy/getAll").permitAll()
+	    	.requestMatchers("/api/payroll-policy/getById/{id}").hasAnyAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/payroll-policy/getByCompanyId/{companyId}").hasAnyAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/payroll-policy/update/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	// REIMBURSEMENT TYPE
+	    	.requestMatchers("/api/reimbursement-type/add/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/reimbursement-type/all").permitAll()
+	    	.requestMatchers("/api/reimbursement-type/get/{id}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/reimbursement-type/by-company/{companyId}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/reimbursement-type/update/{id}/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	// ALLOWANCES
+	    	.requestMatchers("/api/allowance/add/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/allowance/getAll").permitAll()
+	    	.requestMatchers("/api/allowance/getById/{id}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/allowance/getByCompanyId/{companyId}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/allowance/update/{id}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	// EMPLOYEE ALLOWANCE (Monthly Summary per Employee)
+	    	.requestMatchers("/api/employeeAllowance/assign/{employeeId}/{allowanceId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/employeeAllowance/get/{empId}/{month}/{year}").hasAnyAuthority("HR_MANAGER", "SYSTEM_ADMIN", "PAYROLL_ADMIN")
+
+	    	// EMPLOYEE ALLOWANCE ITEMS (Per Allowance Entry)
+	    	.requestMatchers("/api/employeeAllowanceItem/add").hasAuthority("HR_MANAGER")
+	    	.requestMatchers("/api/employeeAllowanceItem/getByParentId/{parentId}").hasAnyAuthority("HR_MANAGER", "SYSTEM_ADMIN", "PAYROLL_ADMIN")
+	    	.requestMatchers("/api/employeeAllowanceItem/getById/{id}").hasAnyAuthority("HR_MANAGER", "SYSTEM_ADMIN")
+	    	.requestMatchers("/api/employeeAllowanceItem/delete/{id}").hasAuthority("HR_MANAGER")
+	    	
+	    	// MONTHLY ALLOWANCE
+	    	.requestMatchers("/api/employee-monthly-allowance/calculate/{employeeId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/employee-monthly-allowance/getByEmployee/{employeeId}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	//OVERTIME POLICY
+	    	.requestMatchers("/api/overtime-policy/add/{designationId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/overtime-policy/getByDesignation/{designationId}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	//OVERTIME REQUEST
+	    	.requestMatchers("/api/overtime-request/request").hasAuthority("EMPLOYEE")
+	    	.requestMatchers("/api/overtime-request/update-status").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	
+	    	
+	    	// HR DEPARTMENT
+	    	.requestMatchers("/api/hr-department/add/{employeeId}/{departmentId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/hr-department/getAll").hasAnyAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/hr-department/getById/{id}").hasAnyAuthority("SYSTEM_ADMIN")
+	    	
+	    	// BLOCKED DAYS
+	    	.requestMatchers("/api/blocked-day/add/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/blocked-day/getAll").permitAll()
+	    	.requestMatchers("/api/blocked-day/getById/{id}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/blocked-day/getByCompanyId/{companyId}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/blocked-day/update/{id}/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/blocked-day/block-weekends/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	// LEAVE TYPES
+	    	.requestMatchers("/api/leave-type/add/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/leave-type/getAll").permitAll()
+	    	.requestMatchers("/api/leave-type/getById/{id}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/leave-type/getByCompanyId/{companyId}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/leave-type/update/{id}/{companyId}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	// LEAVE REQUEST
+	    	.requestMatchers("/api/leave-request/apply/{employeeId}/{leaveTypeId}/{approverId}").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	
+	    	// EMPLOYEE LEAVE BALANCES---not needed
+	    	.requestMatchers("/api/leave-balance/add/{employeeId}/{leaveTypeId}").hasAuthority("HR_MANAGER")
+	    	.requestMatchers("/api/leave-balance/getAll").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/leave-balance/getById/{id}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/leave-balance/getByEmployeeId/{employeeId}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER", "EMPLOYEE")
+	    	
+	    	// ATTENDANCE RECORD
+	    	.requestMatchers("/api/attendance-records/add/employeeId").hasAnyAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/attendance/getAll").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/attendance/getById/{id}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER")
+	    	.requestMatchers("/api/attendance/getByEmployeeId/{employeeId}").hasAnyAuthority("SYSTEM_ADMIN", "HR_MANAGER", "EMPLOYEE")
+	    	.requestMatchers("/api/attendance/bulk").hasAnyAuthority("SYSTEM_ADMIN")
+	    	
+	    	// INCOME TAX SLABS
+	    	.requestMatchers("/api/tax-slabs/income/add-batch").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/tax-slabs/income/get").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/tax-slabs/income/getAll").hasAuthority("SYSTEM_ADMIN")
+	    	
+	    	// PROFESSIONAL TAX SLABS
+	    	.requestMatchers("/api/tax-slabs/professional/add-batch").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/tax-slabs/professional/get").hasAuthority("SYSTEM_ADMIN")
+	    	.requestMatchers("/api/tax-slabs/professional/getAll").hasAuthority("SYSTEM_ADMIN")
+
+//http://localhost:8080/api/payroll/run?month=6&year=2025&policyId=1
+	    	
+	    	.requestMatchers("/api/payroll/run").hasAuthority("SYSTEM_ADMIN")
+
+	       	
+			.anyRequest().authenticated()  
+			)
+			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) 
+		 .httpBasic(Customizer.withDefaults()); 
+		return http.build();
+	}
+	
+	@Bean
+	PasswordEncoder passwordEncoder() {  
+		return new BCryptPasswordEncoder();
+	}
+	
+	@Bean
+	AuthenticationManager getAuthManager(AuthenticationConfiguration auth) 
+			throws Exception {
+		  return auth.getAuthenticationManager();
+	 }
+	
+
+}

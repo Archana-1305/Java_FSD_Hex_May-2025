@@ -1,0 +1,14 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.payrollmanagement.easypay.model.EmployeeAllowanceItem;
+
+public interface EmployeeAllowanceRepository extends JpaRepository<EmployeeAllowanceItem, Integer>{
+	 List<EmployeeAllowanceItem> findByEmployeeAllowanceId(int employeeAllowanceId);
+
+	Object findByEmployeeIdAndMonthAndYear(int empId, int month, int year);
+
+}

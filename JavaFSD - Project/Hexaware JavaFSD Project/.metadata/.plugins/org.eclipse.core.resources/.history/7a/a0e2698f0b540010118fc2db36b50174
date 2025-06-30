@@ -1,0 +1,22 @@
+package com.payrollmanagement.easypay.repository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import com.payrollmanagement.easypay.model.Employee;
+import com.payrollmanagement.easypay.model.MonthReimbursement;
+
+public interface MonthReimbursementRepository extends JpaRepository<MonthReimbursement, Integer>{
+
+	
+	Optional<Employee> findByEmployeeAndMonthAndYear(Employee employee, int month, int year);
+
+	@Query("SELECT mr FROM MonthReimbursement mr WHERE mr.employee.id = ?1 AND mr.month = ?2 AND mr.year = ?3")
+	Optional<MonthReimbursement>  getByEmployeeAndMonthAndYear(Employee employee, int month, int year);
+
+	//Optional<Employee> findByEmployeeAndMonthAndYear(Employee employee, int month, int year);
+
+}
